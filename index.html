@@ -157,7 +157,7 @@
   }
   .item-price {
     font-size: 13px;
-    color: var(--ink);
+    color: var(--green);
     font-weight: 700;
     margin-top: 2px;
     font-family: 'DM Mono', monospace;
@@ -327,7 +327,7 @@
   }
   .summary-row:last-child { border-bottom: none; }
   .summary-row .label { color: var(--ink-soft); flex: 1; }
-  .summary-row .val { font-weight: 700; color: var(--ink); text-align: right; font-family: 'DM Mono', monospace; }
+  .summary-row .val { font-weight: 700; color: var(--green); text-align: right; font-family: 'DM Mono', monospace; }
   .summary-total {
     padding: 14px;
     display: flex;
@@ -1502,7 +1502,7 @@ function submitOrder() {
   const params = new URLSearchParams({
     name, phone, address, notes,
     items: allItems,
-    total: 'RM ' + total.toFixed(2),
+    total: total.toFixed(2),
     payment: paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)',
     deliveryDate: getDeliveryDateValue(),
     timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })
@@ -1530,7 +1530,7 @@ function openWhatsApp() {
   });
   const allLines = [...items, ...customLines].join('\n');
   const total = getCartTotal();
-  const msg = `Assalamualaikum Dietliciouss 🌿\n\nSaya ingin membuat pesanan seperti berikut:\n\n${allLines}\n\nJumlah: RM${total.toFixed(2)}\nKaedah Bayaran: ${paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)'}\n\nNama: ${name}\n\nSila sahkan pesanan saya. Terima kasih.`;
+  const msg = `Hi Dietliciouss\n\nI would like to place an order as follows:\n\n${allLines}\n\nTotal: RM${total.toFixed(2)}\nPayment Method: ${paymentMethod === 'qr' ? 'DuitNow QR' : 'Bank Transfer (Maybank)'}\n\nName: ${name}\n\nPlease confirm my order. Thank you.`;
   window.open('https://wa.me/60126180886?text=' + encodeURIComponent(msg), '_blank');
 }
 
