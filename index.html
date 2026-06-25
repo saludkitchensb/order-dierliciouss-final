@@ -327,7 +327,7 @@
   }
   .summary-row:last-child { border-bottom: none; }
   .summary-row .label { color: var(--ink-soft); flex: 1; }
-  .summary-row .val { font-weight: 700; color: var(--green); text-align: right; font-family: 'DM Mono', monospace; }
+  .summary-row .val { font-weight: 700; color: var(--ink); text-align: right; font-family: 'DM Mono', monospace; }
   .summary-total {
     padding: 14px;
     display: flex;
@@ -362,6 +362,31 @@
     margin-bottom: 14px;
   }
   .field-group { margin-bottom: 12px; }
+  .method-toggle {
+    display: flex;
+    gap: 8px;
+  }
+  .method-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .method-btn .en { color: var(--ink-mute); font-size: 11px; }
+  .method-btn.active {
+    border-color: var(--green);
+    background: var(--green-pale);
+    color: var(--green);
+  }
+  .method-btn.active .en { color: var(--green-light); }
   .field-group:last-child { margin-bottom: 0; }
 
   /* PAYMENT */
@@ -870,12 +895,24 @@
       <input type="tel" id="cust-phone" placeholder="cth: 0123456789">
     </div>
     <div class="field-group">
+      <div class="field-label">Kaedah Penerimaan * <span class="en" style="font-weight:400;">/ Receiving Method</span></div>
+      <div class="method-toggle">
+        <button type="button" class="method-btn active" id="method-delivery" onclick="setReceiveMethod('delivery')">
+          🚚 Penghantaran<span class="en" style="display:block;font-weight:400;">Delivery</span>
+        </button>
+        <button type="button" class="method-btn" id="method-pickup" onclick="setReceiveMethod('pickup')">
+          🏪 Self Pickup<span class="en" style="display:block;font-weight:400;">Self Pickup</span>
+        </button>
+      </div>
+    </div>
+    <div class="field-group" id="address-group">
       <div class="field-label">Alamat Penghantaran *</div>
       <textarea id="cust-address" placeholder="No, Jalan, Taman, Poskod, Negeri"></textarea>
     </div>
+    <div class="note" id="pickup-note" style="display:none;">🏪 <strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
   </div>
 
-  <div class="info-card">
+  <div class="info-card" id="delivery-info-card">
     <div class="info-card-title">Penghantaran</div>
     <div id="delivery-estimate" class="delivery-badge">📅 Anggaran: sedang dikira...</div>
     <div id="delivery-status" class="delivery-badge" style="margin-top:8px;">🚚 Status penghantaran: sedang dikira...</div>
@@ -1048,6 +1085,7 @@ let quantities = new Array(PRODUCTS.length).fill(0);
 let customMeals = [];
 let currentPage = 1;
 let paymentMethod = 'qr';
+let receiveMethod = 'delivery'; // 'delivery' atau 'pickup'
 let customMealCounter = 0;
 
 // ============================================================
@@ -1434,7 +1472,7 @@ function validateInfo() {
   const address = document.getElementById('cust-address').value.trim();
   if (!name) { showToast('Sila masukkan nama penuh anda.'); return false; }
   if (!phone || phone.length < 9) { showToast('Nombor telefon tidak sah.'); return false; }
-  if (!address) { showToast('Sila masukkan alamat penghantaran.'); return false; }
+  if (receiveMethod === 'delivery' && !address) { showToast('Sila masukkan alamat penghantaran.'); return false; }
   return true;
 }
 
@@ -1447,6 +1485,17 @@ function setPayment(method) {
   document.getElementById('tab-bank').classList.toggle('active', method === 'bank');
   document.getElementById('payment-qr').style.display = method === 'qr' ? 'block' : 'none';
   document.getElementById('payment-bank').style.display = method === 'bank' ? 'block' : 'none';
+}
+
+function setReceiveMethod(method) {
+  receiveMethod = method;
+  const isDelivery = method === 'delivery';
+  document.getElementById('method-delivery').classList.toggle('active', isDelivery);
+  document.getElementById('method-pickup').classList.toggle('active', !isDelivery);
+  // Address & delivery info hanya untuk delivery
+  document.getElementById('address-group').style.display = isDelivery ? 'block' : 'none';
+  document.getElementById('delivery-info-card').style.display = isDelivery ? 'block' : 'none';
+  document.getElementById('pickup-note').style.display = isDelivery ? 'none' : 'block';
 }
 
 // Bina baris custom meal dalam FORMAT yang production summary boleh baca
@@ -1499,11 +1548,15 @@ function submitOrder() {
   const allItems = [...items, ...customLines].join('\n');
   const total = getCartTotal();
 
+  const isPickup = receiveMethod === 'pickup';
   const params = new URLSearchParams({
-    name, phone, address, notes,
+    name, phone,
+    address: isPickup ? 'SELF PICKUP @ Cybersouth' : address,
+    notes,
     items: allItems,
-    total: total.toFixed(2),
+    total: 'RM ' + total.toFixed(2),
     payment: paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)',
+    deliveryMethod: isPickup ? 'Self Pickup' : 'Delivery',
     deliveryDate: getDeliveryDateValue(),
     timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })
   });
@@ -1520,6 +1573,10 @@ function submitOrder() {
 // ============================================================
 function openWhatsApp() {
   const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
+  const address = document.getElementById('cust-address').value.trim();
+  const notes = document.getElementById('cust-notes').value.trim();
+
   const items = quantities.map((q, i) => q > 0 ? `• ${PRODUCTS[i].name} x${q}` : null).filter(Boolean);
   const customLines = customMeals.map((m, i) => {
     const p = PROTEIN_OPTIONS.find(x => x.name === m.protein);
@@ -1530,7 +1587,17 @@ function openWhatsApp() {
   });
   const allLines = [...items, ...customLines].join('\n');
   const total = getCartTotal();
-  const msg = `Hi Dietliciouss\n\nI would like to place an order as follows:\n\n${allLines}\n\nTotal: RM${total.toFixed(2)}\nPayment Method: ${paymentMethod === 'qr' ? 'DuitNow QR' : 'Bank Transfer (Maybank)'}\n\nName: ${name}\n\nPlease confirm my order. Thank you.`;
+  const isPickup = receiveMethod === 'pickup';
+
+  let msg = `Hi Dietliciouss\nI would like to place an order as follows:\n\n${allLines}\n\nTotal: RM${total.toFixed(2)}\nPayment Method: ${paymentMethod === 'qr' ? 'DuitNow QR' : 'Bank Transfer (Maybank)'}\nReceiving Method: ${isPickup ? 'Self Pickup @ Cybersouth' : 'Delivery'}\n\nName: ${name}\nPhone: ${phone}`;
+  if (!isPickup) {
+    msg += `\nAddress: ${address}`;
+  }
+  if (notes) {
+    msg += `\nNotes: ${notes}`;
+  }
+  msg += `\n\nPlease confirm my order. Thank you.`;
+
   window.open('https://wa.me/60126180886?text=' + encodeURIComponent(msg), '_blank');
 }
 
@@ -1550,6 +1617,7 @@ function resetOrder() {
   document.getElementById('cust-phone').value = '';
   document.getElementById('cust-address').value = '';
   document.getElementById('cust-notes').value = '';
+  setReceiveMethod('delivery');
   goToPage(1);
 }
 
