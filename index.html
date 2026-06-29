@@ -143,6 +143,7 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 2</div>
       <div class="item-price">RM 100.00</div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 11 Julai<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 11 July</span></div>
       <div class="cutoff-label" id="cutoff-label-0" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -155,6 +156,7 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 4</div>
       <div class="item-price">RM 100.00</div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 25 Julai<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 25 July</span></div>
       <div class="cutoff-label" id="cutoff-label-23" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -620,6 +622,22 @@ const CUTOFF_DATES = {
   23: '2026-07-21T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
 };
 
+// Fixed delivery/self-pickup dates for Budget Diet Meal weeks (per catalog).
+// These override the normal 3-5 working day estimate when the order contains
+// one of these items. Edit alongside CUTOFF_DATES each month.
+const FIXED_DELIVERY_DATES = {
+  0:  { bm: '11 Julai 2026', en: '11 July 2026' },  // Budget Diet Meal Week 2
+  23: { bm: '25 Julai 2026', en: '25 July 2026' },  // Budget Diet Meal Week 4
+};
+
+function getFixedDeliveryDateForCart() {
+  // If the cart contains a Budget Diet Meal week item, return its fixed date.
+  // If both are somehow in the cart, return both joined.
+  const idxs = Object.keys(FIXED_DELIVERY_DATES).map(Number).filter(idx => (quantities[idx] || 0) > 0);
+  if (idxs.length === 0) return null;
+  return idxs.map(idx => FIXED_DELIVERY_DATES[idx]);
+}
+
 function isPastCutoff(productIndex) {
   const cutoff = CUTOFF_DATES[productIndex];
   if (!cutoff) return false;
@@ -903,6 +921,11 @@ function renderCartSummary() {
 }
 
 function getDeliveryEstimate() {
+  const fixed = getFixedDeliveryDateForCart();
+  if (fixed && fixed.length > 0) {
+    const dateStr = fixed.map(f => f.bm).join(' / ');
+    return `Tarikh Delivery/Self Pickup: ${dateStr} (Budget Diet Meal)`;
+  }
   const today = new Date();
   let workdays = 0, d = new Date(today);
   while (workdays < 5) {
@@ -916,6 +939,10 @@ function getDeliveryEstimate() {
 }
 
 function getDeliveryDateValue() {
+  const fixed = getFixedDeliveryDateForCart();
+  if (fixed && fixed.length > 0) {
+    return fixed.map(f => f.bm).join(' / ');
+  }
   const today = new Date();
   let workdays = 0, d = new Date(today);
   while (workdays < 5) {
