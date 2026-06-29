@@ -417,7 +417,7 @@
   </div>
 
   <div class="category-label">Custom Meal Prep</div>
-  <div class="note">Bina pakej anda sendiri. Min order: <strong>Protein 20 pack/jenis</strong>. Carbs (jika ada) min 10 pack/jenis, jumlah min 20 pack.<span class="en">Build your own package. Minimum order: 20 packs per protein type. Carbs (if added) minimum 10 packs per type, 20 packs total.</span></div>
+  <div class="note">Bina pakej anda sendiri. Min order: <strong>Protein 20 pack/jenis</strong>. Default packing: Vacuum Pack. Pilihan upgrade ke Bento Pack dengan tambahan RM1/pack.<span class="en">Build your own package. Minimum order: 20 packs per protein type. Default packing: Vacuum Pack. Option to upgrade to Bento Pack for an extra RM1/pack.</span></div>
   <div id="custom-meals-container"></div>
   <button class="add-custom-btn" onclick="addCustomMeal()">+ Tambah Custom Meal / <span class="en" style="color:inherit;">Add Custom Meal</span></button>
 
@@ -687,11 +687,6 @@ const PRODUCTS = [
   { name: 'Budget Diet Meal Week 4', price: 100 },
 ];
 
-const CARBS_OPTIONS = [
-  { name: 'Plain Basmati Rice', price: 5 },
-  { name: 'Flavoured Basmati Rice', price: 6 },
-  { name: 'Spaghetti Aglio Olio', price: 6 }
-];
 const PROTEIN_OPTIONS = [
   { name: 'Chicken Breast', type: 'weight', pricePer100g: 8 },
   { name: 'Salmon Fillet', type: 'fillet', pricePerFillet: 22 }
@@ -753,10 +748,7 @@ function addCustomMeal() {
     protein: '',
     weight: 200,
     proteinPacks: 20,
-    carbs: '',
-    carbsPacks: 10,
-    carbs2: '',
-    carbs2Packs: 10,
+    packing: 'vacuum',
     flavours: []
   });
   renderCustomMeals();
@@ -792,17 +784,17 @@ function toggleFlavour(id, flavour) {
 function getCustomMealPrice(meal) {
   let price = 0;
   const p = PROTEIN_OPTIONS.find(x => x.name === meal.protein);
+  const packs = parseInt(meal.proteinPacks) || 0;
   if (p) {
     if (p.type === 'weight') {
-      price += p.pricePer100g * (meal.weight / 100) * (parseInt(meal.proteinPacks) || 0);
+      price += p.pricePer100g * (meal.weight / 100) * packs;
     } else {
-      price += p.pricePerFillet * (parseInt(meal.proteinPacks) || 0);
+      price += p.pricePerFillet * packs;
     }
   }
-  const c1 = CARBS_OPTIONS.find(x => x.name === meal.carbs);
-  if (c1) price += c1.price * (parseInt(meal.carbsPacks) || 0);
-  const c2 = CARBS_OPTIONS.find(x => x.name === meal.carbs2);
-  if (c2) price += c2.price * (parseInt(meal.carbs2Packs) || 0);
+  if (meal.packing === 'bento') {
+    price += 1 * packs; // RM1 upgrade per pack for Bento packing
+  }
   return price;
 }
 
@@ -851,27 +843,15 @@ function renderCustomMeals() {
         </div>
       </div>` : '')}
 
-      <div class="field-label" style="margin-top:12px;">Carbs (pilihan)</div>
-      <div class="custom-row">
-        <div>
-          <select onchange="updateCustomMeal(${meal.id},'carbs',this.value)">
-            <option value="">-- Tiada --</option>
-            ${CARBS_OPTIONS.map(c => `<option value="${c.name}" ${meal.carbs===c.name?'selected':''}>${c.name} (RM${c.price})</option>`).join('')}
-          </select>
-        </div>
-        <div>
-          <input type="number" min="10" step="1" value="${meal.carbsPacks}" placeholder="Packs" onchange="updateCustomMeal(${meal.id},'carbsPacks',this.value)" ${meal.carbs?'':'disabled'}>
-        </div>
-      </div>
-      <div class="custom-row">
-        <div>
-          <select onchange="updateCustomMeal(${meal.id},'carbs2',this.value)">
-            <option value="">-- Carbs kedua (pilihan) --</option>
-            ${CARBS_OPTIONS.map(c => `<option value="${c.name}" ${meal.carbs2===c.name?'selected':''}>${c.name} (RM${c.price})</option>`).join('')}
-          </select>
-        </div>
-        <div>
-          <input type="number" min="10" step="1" value="${meal.carbs2Packs}" placeholder="Packs" onchange="updateCustomMeal(${meal.id},'carbs2Packs',this.value)" ${meal.carbs2?'':'disabled'}>
+      <div class="field-label" style="margin-top:12px;">Packing</div>
+      <div class="custom-row full">
+        <div class="method-toggle">
+          <button type="button" class="method-btn ${meal.packing==='vacuum'?'active':''}" onclick="updateCustomMeal(${meal.id},'packing','vacuum')">
+            Vacuum Pack<span class="en" style="display:block;font-weight:400;">Default</span>
+          </button>
+          <button type="button" class="method-btn ${meal.packing==='bento'?'active':''}" onclick="updateCustomMeal(${meal.id},'packing','bento')">
+            Bento Pack (+RM1/pack)<span class="en" style="display:block;font-weight:400;">Upgrade</span>
+          </button>
         </div>
       </div>
 
@@ -910,8 +890,8 @@ function renderCartSummary() {
   });
   customMeals.forEach((meal, i) => {
     const proteinDesc = meal.protein ? (PROTEIN_OPTIONS.find(x=>x.name===meal.protein)?.type==='weight' ? `${meal.protein} ${meal.weight}g × ${meal.proteinPacks}` : `${meal.protein} × ${meal.proteinPacks}`) : '?';
-    const carbsDesc = [meal.carbs && `${meal.carbs} × ${meal.carbsPacks}`, meal.carbs2 && `${meal.carbs2} × ${meal.carbs2Packs}`].filter(Boolean).join(', ');
-    const desc = [proteinDesc, carbsDesc].filter(Boolean).join('<br>');
+    const packingDesc = meal.packing === 'bento' ? 'Bento Pack (+RM1/pack)' : 'Vacuum Pack';
+    const desc = [proteinDesc, packingDesc].filter(Boolean).join('<br>');
     const cmPrice = getCustomMealPrice(meal);
     html += `<div class="summary-row"><span class="label">Custom Meal ${i+1}<br><small style="color:var(--ink-mute)">${desc}</small></span><span class="val">RM ${cmPrice.toFixed(2)}</span></div>`;
   });
@@ -948,10 +928,39 @@ function getDeliveryDateValue() {
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+// ============================================================
+// DELIVERY AREA DETECTION
+// ============================================================
+// Cyberjaya: closer/local area, qualifies for FREE delivery at lower min RM150.
+const CYBERJAYA_KEYWORDS = ['cyberjaya'];
+
+// KL & Klang Valley: wider area, qualifies for FREE delivery at min RM550.
+// Keyword list matched against the customer's typed address (case-insensitive).
+const KLANG_VALLEY_KEYWORDS = [
+  'kuala lumpur', ' kl ', 'wilayah persekutuan',
+  'petaling jaya', ' pj ', 'subang jaya', 'subang', 'usj',
+  'shah alam', 'klang', 'puchong', 'kajang', 'cheras',
+  'ampang', 'gombak', 'selayang', 'rawang', 'sungai buloh',
+  'damansara', 'bandar utama', 'mont kiara', 'bangsar',
+  'setapak', 'wangsa maju', 'kepong', 'kepong', 'sentul',
+  'sri petaling', 'bukit jalil', 'old klang road', 'seri kembangan',
+  'serdang', 'bandar baru bangi', 'putrajaya', 'semenyih',
+  'banting', 'kuala selangor', 'sepang', 'salak tinggi',
+  'balakong', 'cyberjaya', 'shah alam', 'glenmarie', 'kelana jaya',
+  'sunway', 'bandar sunway', 'ara damansara', 'kota damansara',
+  'selangor'
+];
+
+function addressMatchesArea(address, keywords) {
+  const a = ' ' + address + ' '; // pad to help word-boundary-ish matching for short tokens
+  return keywords.some(k => a.includes(k));
+}
+
 function getDeliveryStatus() {
-  const address = (document.getElementById('cust-address').value || '').toLowerCase();
+  const addressRaw = (document.getElementById('cust-address').value || '').toLowerCase();
   const total = getCartTotal();
-  const isCyberjaya = address.includes('cyberjaya');
+  const isCyberjaya = addressMatchesArea(addressRaw, CYBERJAYA_KEYWORDS);
+  const isKlangValley = addressMatchesArea(addressRaw, KLANG_VALLEY_KEYWORDS);
   const isFrozenBoxMethod = receiveMethod === 'frozenbox';
 
   if (isFrozenBoxMethod) {
@@ -961,23 +970,33 @@ function getDeliveryStatus() {
     ] };
   }
 
-  if (total >= 550) {
-    return { free: true, paragraphs: [
-      { bm: '🎉 Penghantaran PERCUMA — pembelian melebihi RM550!', en: 'FREE Delivery — orders above RM550!' }
-    ] };
-  }
-  if (isCyberjaya && total >= 150) {
-    return { free: true, paragraphs: [
-      { bm: '🎉 Penghantaran PERCUMA — kawasan Cyberjaya (min RM150)!', en: 'FREE Delivery — Cyberjaya area (min RM150)!' }
-    ] };
-  }
-  if (isCyberjaya && total < 150) {
+  // Cyberjaya: FREE at min RM150 (checked first - lower threshold, closer area)
+  if (isCyberjaya) {
+    if (total >= 150) {
+      return { free: true, paragraphs: [
+        { bm: '🎉 Penghantaran PERCUMA — kawasan Cyberjaya (min RM150)!', en: 'FREE Delivery — Cyberjaya area (min RM150)!' }
+      ] };
+    }
     return { free: false, paragraphs: [
       { bm: 'Caj penghantaran ikut kadar Lalamove (bayar pada rider). Tambah pembelian ke RM150 untuk penghantaran percuma!', en: 'Delivery charged at Lalamove rates (paid to rider). Add up to RM150 for free delivery!' }
     ] };
   }
+
+  // KL & Klang Valley: FREE at min RM550
+  if (isKlangValley) {
+    if (total >= 550) {
+      return { free: true, paragraphs: [
+        { bm: '🎉 Penghantaran PERCUMA — kawasan KL &amp; Klang Valley (min RM550)!', en: 'FREE Delivery — KL &amp; Klang Valley area (min RM550)!' }
+      ] };
+    }
+    return { free: false, paragraphs: [
+      { bm: 'Caj penghantaran ikut kadar Lalamove, dibayar terus kepada rider pada hari penghantaran. Tambah ke RM550 untuk penghantaran percuma (kawasan KL &amp; Klang Valley)!', en: 'Delivery charged at Lalamove rates, paid directly to the rider on delivery day. Add up to RM550 for free delivery (KL &amp; Klang Valley area)!' }
+    ] };
+  }
+
+  // Outside Cyberjaya and KL & Klang Valley: no free delivery offer, Lalamove rates apply
   return { free: false, paragraphs: [
-    { bm: 'Caj penghantaran ikut kadar Lalamove, dibayar terus kepada rider pada hari penghantaran. Tambah ke RM550 untuk penghantaran percuma!', en: 'Delivery charged at Lalamove rates, paid directly to the rider on delivery day. Add up to RM550 for free delivery!' }
+    { bm: 'Alamat anda berada luar kawasan KL &amp; Klang Valley / Cyberjaya. Caj penghantaran ikut kadar Lalamove, dibayar terus kepada rider pada hari penghantaran. Tawaran penghantaran percuma hanya untuk kawasan KL &amp; Klang Valley (min RM550) atau Cyberjaya (min RM150).', en: 'Your address is outside the KL &amp; Klang Valley / Cyberjaya area. Delivery is charged at Lalamove rates, paid directly to the rider on delivery day. Free delivery is only available for KL &amp; Klang Valley (min RM550) or Cyberjaya (min RM150) areas.' }
   ] };
 }
 
@@ -1143,11 +1162,6 @@ function validateCustomMeals() {
     const n = i + 1;
     if (!m.protein) { showToast(`Custom Meal ${n}: sila pilih protein.`); return false; }
     if ((parseInt(m.proteinPacks) || 0) < 20) { showToast(`Custom Meal ${n}: protein minimum 20 pack.`); return false; }
-    const c1 = m.carbs ? (parseInt(m.carbsPacks) || 0) : 0;
-    const c2 = m.carbs2 ? (parseInt(m.carbs2Packs) || 0) : 0;
-    if (m.carbs && c1 < 10) { showToast(`Custom Meal ${n}: carbs minimum 10 pack/jenis.`); return false; }
-    if (m.carbs2 && c2 < 10) { showToast(`Custom Meal ${n}: carbs minimum 10 pack/jenis.`); return false; }
-    if ((m.carbs || m.carbs2) && (c1 + c2) < 20) { showToast(`Custom Meal ${n}: jumlah carbs minimum 20 pack.`); return false; }
     if (m.flavours.length === 0) { showToast(`Custom Meal ${n}: sila pilih sekurang-kurangnya 1 flavour.`); return false; }
   }
   return true;
@@ -1198,26 +1212,18 @@ function buildCustomMealLines() {
     const p = PROTEIN_OPTIONS.find(x => x.name === meal.protein);
     if (p) {
       const packs = parseInt(meal.proteinPacks) || 0;
-      let lbl, price;
+      let lbl;
       if (p.type === 'weight') {
         lbl = `${p.name} ${meal.weight}g`;
-        price = p.pricePer100g * (meal.weight / 100) * packs;
       } else {
         lbl = p.name;
-        price = p.pricePerFillet * packs;
       }
+      const price = getCustomMealPrice(meal);
+      const packingLbl = meal.packing === 'bento' ? 'Bento Pack (+RM1/pack)' : 'Vacuum Pack';
       const ft = meal.flavours.length === 2
         ? `Flavours: ${meal.flavours[0]} + ${meal.flavours[1]}`
         : (meal.flavours.length === 1 ? `Flavour: ${meal.flavours[0]}` : 'Flavour: -');
-      lines.push(`[Custom] ${lbl} x${packs} packs | ${ft} = RM${price.toFixed(2)}`);
-    }
-    if (meal.carbs) {
-      const packs = parseInt(meal.carbsPacks) || 0;
-      lines.push(`[Custom-Carb] ${meal.carbs} x${packs} packs`);
-    }
-    if (meal.carbs2) {
-      const packs = parseInt(meal.carbs2Packs) || 0;
-      lines.push(`[Custom-Carb] ${meal.carbs2} x${packs} packs`);
+      lines.push(`[Custom] ${lbl} x${packs} packs | Packing: ${packingLbl} | ${ft} = RM${price.toFixed(2)}`);
     }
   });
   return lines;
@@ -1266,9 +1272,9 @@ function openWhatsApp() {
   const customLines = customMeals.map((m, i) => {
     const p = PROTEIN_OPTIONS.find(x => x.name === m.protein);
     const proteinDesc = p ? (p.type === 'weight' ? `${m.protein} ${m.weight}g x${m.proteinPacks}` : `${m.protein} x${m.proteinPacks}`) : '?';
-    const carbsDesc = [m.carbs && `${m.carbs} x${m.carbsPacks}`, m.carbs2 && `${m.carbs2} x${m.carbs2Packs}`].filter(Boolean).join(', ');
+    const packingDesc = m.packing === 'bento' ? 'Bento Pack (+RM1/pack)' : 'Vacuum Pack';
     const flav = m.flavours.join(' + ') || '-';
-    return `• Custom Meal ${i+1}: ${proteinDesc}${carbsDesc ? ' + ' + carbsDesc : ''} (${flav})`;
+    return `• Custom Meal ${i+1}: ${proteinDesc} | ${packingDesc} (${flav})`;
   });
   const allLines = [...items, ...customLines].join('\n');
   const isPickup = receiveMethod === 'pickup';
