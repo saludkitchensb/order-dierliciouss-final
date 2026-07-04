@@ -200,6 +200,18 @@
   </div>
 
   <div class="category-label">Breakfast</div>
+  <div class="menu-item" id="item-24">
+    <div class="item-info">
+      <div class="item-name">30 Days Breakfast Package</div>
+      <div class="item-price">RM 319.00</div>
+      <div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">10x Sourdough Muffin (4 Egg, 3 Ayam, 3 Daging) + 10x Wholemeal Wrap (4 Egg, 3 Ayam, 3 Daging) + 10x Overnight Oats (4 Vanilla Cranberry, 3 Mangga, 3 Chocolate Raisin)<span class="en" style="display:block;font-weight:400;font-size:10px;">10x Sourdough Muffin (4 Egg, 3 Chicken, 3 Beef) + 10x Wholemeal Wrap (4 Egg, 3 Chicken, 3 Beef) + 10x Overnight Oats (4 Vanilla Cranberry, 3 Mango, 3 Chocolate Raisin)</span></div>
+    </div>
+    <div class="qty-ctrl">
+      <button class="qty-btn" onclick="changeQty(24,-1)">−</button>
+      <span class="qty-val" id="qty-24">0</span>
+      <button class="qty-btn" onclick="changeQty(24,1)">+</button>
+    </div>
+  </div>
   <div class="menu-item" id="item-4">
     <div class="item-info">
       <div class="item-name">7 Days Breakfast</div>
@@ -702,6 +714,7 @@ const PRODUCTS = [
   { name: 'Spaghetti', price: 6 },
   { name: 'Mix Carbs', price: 50 },
   { name: 'Budget Diet Meal Week 4', price: 100 },
+  { name: '30 Days Breakfast Package', price: 319 },
 ];
 
 const PROTEIN_OPTIONS = [
@@ -1046,7 +1059,8 @@ function updateDeliveryStatus() {
 //   RM45 - up to 4x protein-type packs, 2x custom packs, 1x each of
 //          7 Days Breakfast / Sourdough Muffin / Wholemeal Wrap / Mix Carbs / Value Breakfast
 //   RM55 - 1x Bento, 1x Budget Diet Meal (any week) ONLY, OR RM45-tier qty exceeded ONLY (not combined)
-//   RM65 - 1x 2MAD (each additional 2MAD set adds another RM65 box)
+//   RM65 - 1x 2MAD OR 1x 30 Days Breakfast Package (each additional set adds another RM65 box)
+//   RM90 - 1x 2MAD TOGETHER WITH 1x 30 Days Breakfast Package (combo flat rate, extra sets +RM65 each)
 //   RM75 - Bento/Budget Diet Meal present TOGETHER WITH protein/custom pack qty exceeding RM45 limits
 function getFrozenBoxCharge() {
   // Indices in PRODUCTS array
@@ -1054,14 +1068,21 @@ function getFrozenBoxCharge() {
         IDX_7DAY_BREAKFAST = 4, IDX_SOURDOUGH_CHICKEN = 8, IDX_SOURDOUGH_BEEF = 9, IDX_SOURDOUGH_SET = 10,
         IDX_WRAP_CHICKEN = 11, IDX_WRAP_BEEF = 12, IDX_WRAP_SET = 13, IDX_PATTY = 14,
         IDX_MIX_CHICKEN = 15, IDX_MIX_DORY = 16, IDX_MIX_SALMON = 17, IDX_MIX_PROTEIN = 18,
-        IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23;
+        IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24;
 
   const qty = i => quantities[i] || 0;
 
-  // 2MAD: 1 box (RM65) per set
+  // 2MAD or 30 Days Breakfast Package: 1 dedicated box (RM65) per set (large multi-item packages)
+  // Combo discount: 1x 2MAD + 1x 30 Days Breakfast together = RM90 flat (instead of RM65+RM65)
   const count2mad = qty(IDX_2MAD);
-  if (count2mad > 0) {
-    return count2mad * 65;
+  const count30dayBreakfast = qty(IDX_30DAY_BREAKFAST);
+  if (count2mad > 0 || count30dayBreakfast > 0) {
+    if (count2mad > 0 && count30dayBreakfast > 0) {
+      const extra2mad = Math.max(count2mad - 1, 0);
+      const extra30day = Math.max(count30dayBreakfast - 1, 0);
+      return 90 + (extra2mad * 65) + (extra30day * 65);
+    }
+    return (count2mad * 65) + (count30dayBreakfast * 65);
   }
 
   // Bento or Budget Diet Meal present
