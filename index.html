@@ -342,7 +342,7 @@
   <div class="menu-item" id="item-15">
     <div class="item-info">
       <div class="item-name">Mix Chicken Chop (10 pcs)</div>
-      <div class="item-price">RM 110.00</div>
+      <div class="item-price" id="price-15">RM 110.00</div>
     </div>
     <div class="qty-ctrl">
       <button class="qty-btn" onclick="changeQty(15,-1)">−</button>
@@ -716,6 +716,27 @@ const PRODUCTS = [
   { name: 'Budget Diet Meal Week 4', price: 100 },
   { name: '30 Days Breakfast Package', price: 319 },
 ];
+
+// ============================================================
+// PROMO — Mix Chicken Chop RM110 -> RM100
+// Active: 16 July 2026 00:00 to 19 July 2026 23:59:59 (Asia/Kuala_Lumpur, UTC+8)
+// After this window, price auto-reverts to normal (RM110) with NO further edits needed.
+// TO REMOVE EARLY: delete this whole block + revert the id="price-15" edit above (optional).
+// ============================================================
+(function applyMixChickenPromo() {
+  const IDX_MIX_CHICKEN = 15;
+  const PROMO_START = new Date('2026-07-16T00:00:00+08:00');
+  const PROMO_END   = new Date('2026-07-19T23:59:59+08:00');
+  const now = new Date();
+  if (now >= PROMO_START && now <= PROMO_END) {
+    PRODUCTS[IDX_MIX_CHICKEN].price = 100;
+    const priceEl = document.getElementById('price-' + IDX_MIX_CHICKEN);
+    if (priceEl) {
+      priceEl.innerHTML = '<span style="text-decoration:line-through;opacity:.55;margin-right:6px">RM110.00</span>' +
+        '<span style="color:#c0392b;font-weight:800">RM100.00 🔥 Promo</span>';
+    }
+  }
+})();
 
 const PROTEIN_OPTIONS = [
   { name: 'Chicken Breast', type: 'weight', pricePer100g: 8 },
