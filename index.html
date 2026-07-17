@@ -14,8 +14,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
   .header { background: var(--green); padding: 22px 20px 18px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-  .header-brand { font-size: 22px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
-  .header-brand span { color: var(--green-light); }
   .header-logo { height: auto; width: 100%; max-width: 260px; object-fit: contain; display: inline-block; }
   .header-sub { font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 8px; }
   .progress-bar { background: var(--white); padding: 12px 20px; display: flex; gap: 0; border-bottom: 1px solid var(--border); }
@@ -36,6 +34,8 @@
   .menu-item.has-qty { border-color: var(--green-light); background: #EEF5FB; }
   .menu-item.cutoff { opacity: 0.5; }
   .menu-item.cutoff .qty-btn { cursor: not-allowed; color: var(--ink-mute); }
+  .item-price .promo-strike { text-decoration: line-through; color: var(--ink-mute); font-weight: 500; margin-right: 6px; font-size: 12px; }
+  .promo-label { font-size: 10px; font-weight: 700; color: var(--red); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
   .cutoff-label { font-size: 11px; font-weight: 700; color: var(--red); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
   .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
@@ -103,7 +103,6 @@
   .btn-primary { background: var(--green); color: var(--white); }
   .btn-secondary { background: var(--green-pale); color: var(--green); flex: 0 0 auto; width: 52px; }
   .btn-submit { background: var(--green); color: var(--white); width: 100%; }
-  .btn-disabled { background: var(--border); color: var(--ink-mute); cursor: not-allowed; }
   .btn-wa { background: #25D366; color: var(--white); }
   .cart-badge { position: fixed; bottom: 80px; right: 16px; background: var(--green); color: var(--white); border-radius: 50px; padding: 10px 16px; font-size: 13px; font-weight: 700; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(45,106,79,0.35); cursor: pointer; z-index: 50; -webkit-tap-highlight-color: transparent; }
   .cart-badge.visible { display: flex; }
@@ -342,7 +341,8 @@
   <div class="menu-item" id="item-15">
     <div class="item-info">
       <div class="item-name">Mix Chicken Chop (10 pcs)</div>
-      <div class="item-price" id="price-15">RM 110.00</div>
+      <div class="item-price" id="item-price-15">RM 110.00</div>
+      <div class="promo-label" id="promo-label-15" style="display:none;"></div>
     </div>
     <div class="qty-ctrl">
       <button class="qty-btn" onclick="changeQty(15,-1)">−</button>
@@ -431,7 +431,7 @@
   </div>
 
   <div class="category-label">Custom Meal Prep</div>
-  <div class="note">Bina pakej anda sendiri. Min order: <strong>Protein 20 pack/jenis</strong>. Default packing: Vacuum Pack. Pilihan upgrade ke Bento Pack dengan tambahan RM1/pack.<span class="en">Build your own package. Minimum order: 20 packs per protein type. Default packing: Vacuum Pack. Option to upgrade to Bento Pack for an extra RM1/pack.</span></div>
+  <div class="note">Bina pakej anda sendiri. Min order: <strong>20 pack</strong>, seterusnya dalam gandaan 20 (20, 40, 60...). <strong>2 flavor dibenarkan setiap 20 pack</strong> (cth: 40 pack = 4 flavor). Default packing: Vacuum Pack. Pilihan upgrade ke Bento Pack dengan tambahan RM1/pack.<span class="en">Build your own package. Minimum order: 20 packs, then in multiples of 20 (20, 40, 60...). 2 flavours allowed per 20 packs (e.g. 40 packs = 4 flavours). Default packing: Vacuum Pack. Option to upgrade to Bento Pack for an extra RM1/pack.</span></div>
   <div id="custom-meals-container"></div>
   <button class="add-custom-btn" onclick="addCustomMeal()">+ Tambah Custom Meal / <span class="en" style="color:inherit;">Add Custom Meal</span></button>
 
@@ -483,7 +483,7 @@
       <div class="field-label">Alamat Penghantaran *</div>
       <textarea id="cust-address" placeholder="No, Jalan, Taman, Poskod, Negeri"></textarea>
     </div>
-    <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
+    <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span><div id="pickup-date-estimate" class="delivery-badge" style="margin-top:8px;">Anggaran Self Pickup: sedang dikira...</div></div>
     <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM75</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.<span class="en">Frozen Box Delivery charges range from RM45 to RM75, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.</span></div>
   </div>
 
@@ -718,25 +718,51 @@ const PRODUCTS = [
 ];
 
 // ============================================================
-// PROMO — Mix Chicken Chop RM110 -> RM100
-// Active: 16 July 2026 00:00 to 19 July 2026 23:59:59 (Asia/Kuala_Lumpur, UTC+8)
-// After this window, price auto-reverts to normal (RM110) with NO further edits needed.
-// TO REMOVE EARLY: delete this whole block + revert the id="price-15" edit above (optional).
+// PROMOTIONS (time-limited discounts)
 // ============================================================
-(function applyMixChickenPromo() {
-  const IDX_MIX_CHICKEN = 15;
-  const PROMO_START = new Date('2026-07-16T00:00:00+08:00');
-  const PROMO_END   = new Date('2026-07-19T23:59:59+08:00');
-  const now = new Date();
-  if (now >= PROMO_START && now <= PROMO_END) {
-    PRODUCTS[IDX_MIX_CHICKEN].price = 100;
-    const priceEl = document.getElementById('price-' + IDX_MIX_CHICKEN);
-    if (priceEl) {
-      priceEl.innerHTML = '<span style="text-decoration:line-through;opacity:.55;margin-right:6px">RM110.00</span>' +
-        '<span style="color:#c0392b;font-weight:800">RM100.00 🔥 Promo</span>';
-    }
+// Format: 'YYYY-MM-DDTHH:MM:SS' in Malaysia time (Asia/Kuala_Lumpur, UTC+8).
+// Discount automatically stops applying after `until` - price reverts to the
+// normal PRODUCTS price with no further action needed.
+const PROMOS = {
+  15: { discount: 10, until: '2026-07-19T23:59:59', label: 'PROMO -RM10 (sehingga 19/7)' }, // Mix Chicken Chop
+};
+
+function isPromoActive(productIndex) {
+  const promo = PROMOS[productIndex];
+  if (!promo) return false;
+  const nowMY = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
+  const untilDate = new Date(promo.until);
+  return nowMY <= untilDate;
+}
+
+// The one place price is looked up - promo-aware. Every total/line-item
+// calculation should go through this instead of reading PRODUCTS[i].price directly.
+function getEffectivePrice(productIndex) {
+  const base = PRODUCTS[productIndex].price;
+  if (isPromoActive(productIndex)) {
+    return Math.max(0, base - PROMOS[productIndex].discount);
   }
-})();
+  return base;
+}
+
+function applyPromoStates() {
+  Object.keys(PROMOS).forEach(idxStr => {
+    const idx = parseInt(idxStr);
+    const promo = PROMOS[idx];
+    const priceEl = document.getElementById('item-price-' + idx);
+    const labelEl = document.getElementById('promo-label-' + idx);
+    if (!priceEl) return;
+    if (isPromoActive(idx)) {
+      const base = PRODUCTS[idx].price;
+      const effective = getEffectivePrice(idx);
+      priceEl.innerHTML = `<span class="promo-strike">RM ${base.toFixed(2)}</span>RM ${effective.toFixed(2)}`;
+      if (labelEl) { labelEl.textContent = promo.label; labelEl.style.display = 'block'; }
+    } else {
+      priceEl.textContent = 'RM ' + PRODUCTS[idx].price.toFixed(2);
+      if (labelEl) labelEl.style.display = 'none';
+    }
+  });
+}
 
 const PROTEIN_OPTIONS = [
   { name: 'Chicken Breast', type: 'weight', pricePer100g: 8 },
@@ -768,7 +794,7 @@ function changeQty(idx, delta) {
 
 function getCartTotal() {
   let total = 0;
-  quantities.forEach((q, i) => total += q * PRODUCTS[i].price);
+  quantities.forEach((q, i) => total += q * getEffectivePrice(i));
   customMeals.forEach(m => total += getCustomMealPrice(m));
   return total;
 }
@@ -812,9 +838,31 @@ function removeCustomMeal(id) {
   updateBadge();
 }
 
+// Pack rule: minimum 20 packs, and must go up in steps of 20 (20, 40, 60, ...).
+function normalizePackCount(val) {
+  const n = parseInt(val) || 0;
+  return Math.max(20, Math.round(n / 20) * 20);
+}
+
+// Flavour rule: 2 flavours allowed per 20 packs (20→2, 40→4, 60→6, ...).
+function getMaxFlavours(meal) {
+  const packs = normalizePackCount(meal.proteinPacks);
+  return Math.floor(packs / 20) * 2;
+}
+
 function updateCustomMeal(id, field, val) {
   const meal = customMeals.find(m => m.id === id);
   if (!meal) return;
+
+  if (field === 'proteinPacks') {
+    val = normalizePackCount(val);
+    // If packs went down, trim any flavours beyond the new allowance.
+    const maxFlavours = Math.floor(val / 20) * 2;
+    if (meal.flavours.length > maxFlavours) {
+      meal.flavours = meal.flavours.slice(0, maxFlavours);
+    }
+  }
+
   meal[field] = val;
   renderCustomMeals();
   updateBadge();
@@ -826,7 +874,7 @@ function toggleFlavour(id, flavour) {
   const idx = meal.flavours.indexOf(flavour);
   if (idx > -1) {
     meal.flavours.splice(idx, 1);
-  } else if (meal.flavours.length < 2) {
+  } else if (meal.flavours.length < getMaxFlavours(meal)) {
     meal.flavours.push(flavour);
   }
   renderCustomMeals();
@@ -883,14 +931,14 @@ function renderCustomMeals() {
           </select>
         </div>
         <div>
-          <div class="field-label">Bilangan pack (min 20)</div>
-          <input type="number" min="20" step="1" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+          <div class="field-label">Bilangan pack (20, 40, 60...)</div>
+          <input type="number" min="20" step="20" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
         </div>
       </div>` : (meal.protein ? `
       <div class="custom-row full" style="margin-top:10px;">
         <div>
-          <div class="field-label">Bilangan pack (min 20)</div>
-          <input type="number" min="20" step="1" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+          <div class="field-label">Bilangan pack (20, 40, 60...)</div>
+          <input type="number" min="20" step="20" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
         </div>
       </div>` : '')}
 
@@ -906,12 +954,12 @@ function renderCustomMeals() {
         </div>
       </div>
 
-      <div class="field-label" style="margin-top:12px;margin-bottom:6px;">Flavour (max 2)</div>
-      <div class="flavour-hint">Dipilih: ${meal.flavours.length}/2</div>
+      <div class="field-label" style="margin-top:12px;margin-bottom:6px;">Flavour (2 flavor setiap 20 pack)<span class="en" style="display:block;font-weight:400;">2 flavours per 20 packs</span></div>
+      <div class="flavour-hint">Dipilih: ${meal.flavours.length}/${getMaxFlavours(meal)}</div>
       <div class="flavour-grid">
         ${FLAVOURS.map(f => {
           const isSelected = meal.flavours.includes(f);
-          const isMaxed = meal.flavours.length >= 2 && !isSelected;
+          const isMaxed = meal.flavours.length >= getMaxFlavours(meal) && !isSelected;
           return `<div class="flavour-chip ${isSelected?'selected':''} ${isMaxed?'maxed':''}" onclick="toggleFlavour(${meal.id},'${f}')">${f}</div>`;
         }).join('')}
       </div>
@@ -926,7 +974,7 @@ function renderCustomMeals() {
 
 function renderCartSummary() {
   const container = document.getElementById('cart-summary');
-  const items = quantities.map((q, i) => ({ ...PRODUCTS[i], qty: q })).filter(p => p.qty > 0);
+  const items = quantities.map((q, i) => ({ ...PRODUCTS[i], idx: i, qty: q, price: getEffectivePrice(i) })).filter(p => p.qty > 0);
   const total = getCartTotal();
 
   if (items.length === 0 && customMeals.length === 0) {
@@ -937,7 +985,8 @@ function renderCartSummary() {
   let html = '<div class="summary-card">';
   items.forEach(item => {
     const subtotal = item.qty * item.price;
-    html += `<div class="summary-row"><span class="label">${item.name}<br><small style="color:var(--ink-mute)">RM${item.price.toFixed(2)} × ${item.qty}</small></span><span class="val">RM ${subtotal.toFixed(2)}</span></div>`;
+    const promoTag = isPromoActive(item.idx) ? ` · <span style="color:var(--red);font-weight:700;">PROMO</span>` : '';
+    html += `<div class="summary-row"><span class="label">${item.name}<br><small style="color:var(--ink-mute)">RM${item.price.toFixed(2)} × ${item.qty}${promoTag}</small></span><span class="val">RM ${subtotal.toFixed(2)}</span></div>`;
   });
   customMeals.forEach((meal, i) => {
     const proteinDesc = meal.protein ? (PROTEIN_OPTIONS.find(x=>x.name===meal.protein)?.type==='weight' ? `${meal.protein} ${meal.weight}g × ${meal.proteinPacks}` : `${meal.protein} × ${meal.proteinPacks}`) : '?';
@@ -953,24 +1002,8 @@ function renderCartSummary() {
   document.getElementById('final-total').textContent = 'RM ' + total.toFixed(2);
 }
 
-function getDeliveryEstimate() {
-  const fixed = getFixedDeliveryDateForCart();
-  if (fixed && fixed.length > 0) {
-    const dateStr = fixed.map(f => f.bm).join(' / ');
-    return `Tarikh Delivery/Self Pickup: ${dateStr} (Budget Diet Meal)`;
-  }
-  const today = new Date();
-  let workdays = 0, d = new Date(today);
-  while (workdays < 5) {
-    d.setDate(d.getDate() + 1);
-    const day = d.getDay();
-    if (day !== 0 && day !== 6) workdays++;
-  }
-  const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
-  const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
-  return `Anggaran tiba: ${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
+// Shared helper - both getDeliveryEstimate() and getDeliveryDateValue() used to
+// duplicate this exact date-crunching logic. Now there is one source of truth.
 function getDeliveryDateValue() {
   const fixed = getFixedDeliveryDateForCart();
   if (fixed && fixed.length > 0) {
@@ -986,6 +1019,14 @@ function getDeliveryDateValue() {
   const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
   const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function getDeliveryEstimate() {
+  const fixed = getFixedDeliveryDateForCart();
+  if (fixed && fixed.length > 0) {
+    return `Tarikh Delivery/Self Pickup: ${getDeliveryDateValue()} (Budget Diet Meal)`;
+  }
+  return `Anggaran tiba: ${getDeliveryDateValue()}`;
 }
 
 // ============================================================
@@ -1174,7 +1215,13 @@ function goToPage(n) {
   window.scrollTo(0, 0);
 
   if (n === 2) renderCartSummary();
-  if (n === 3) { document.getElementById('delivery-estimate').textContent = getDeliveryEstimate(); updateDeliveryStatus(); }
+  if (n === 3) {
+    document.getElementById('delivery-estimate').textContent = getDeliveryEstimate();
+    updateDeliveryStatus();
+    if (receiveMethod === 'pickup') {
+      document.getElementById('pickup-date-estimate').textContent = 'Anggaran Self Pickup: ' + getDeliveryDateValue();
+    }
+  }
   if (n === 4) { updateFrozenBoxChargeDisplay(); document.getElementById('final-total').textContent = 'RM ' + getGrandTotal().toFixed(2); }
 
   for (let i = 1; i <= 4; i++) {
@@ -1228,9 +1275,12 @@ function validateCustomMeals() {
   for (let i = 0; i < customMeals.length; i++) {
     const m = customMeals[i];
     const n = i + 1;
+    const packs = parseInt(m.proteinPacks) || 0;
     if (!m.protein) { showToast(`Custom Meal ${n}: sila pilih protein.`); return false; }
-    if ((parseInt(m.proteinPacks) || 0) < 20) { showToast(`Custom Meal ${n}: protein minimum 20 pack.`); return false; }
+    if (packs < 20) { showToast(`Custom Meal ${n}: protein minimum 20 pack.`); return false; }
+    if (packs % 20 !== 0) { showToast(`Custom Meal ${n}: bilangan pack mesti gandaan 20 (20, 40, 60...).`); return false; }
     if (m.flavours.length === 0) { showToast(`Custom Meal ${n}: sila pilih sekurang-kurangnya 1 flavour.`); return false; }
+    if (m.flavours.length > getMaxFlavours(m)) { showToast(`Custom Meal ${n}: maksimum ${getMaxFlavours(m)} flavour untuk ${packs} pack.`); return false; }
   }
   return true;
 }
@@ -1272,6 +1322,9 @@ function setReceiveMethod(method) {
     document.getElementById('delivery-estimate').textContent = getDeliveryEstimate();
     updateDeliveryStatus();
   }
+  if (method === 'pickup') {
+    document.getElementById('pickup-date-estimate').textContent = 'Anggaran Self Pickup: ' + getDeliveryDateValue();
+  }
 }
 
 function buildCustomMealLines() {
@@ -1303,7 +1356,7 @@ function submitOrder() {
   const address = document.getElementById('cust-address').value.trim();
   const notes = document.getElementById('cust-notes').value.trim();
 
-  const items = quantities.map((q, i) => q > 0 ? `${PRODUCTS[i].name} x${q} = RM${(q*PRODUCTS[i].price).toFixed(2)}` : null).filter(Boolean);
+  const items = quantities.map((q, i) => q > 0 ? `${PRODUCTS[i].name} x${q} = RM${(q*getEffectivePrice(i)).toFixed(2)}` : null).filter(Boolean);
   const customLines = buildCustomMealLines();
   const allItems = [...items, ...customLines].join('\n');
   const isFrozenBoxSubmit = receiveMethod === 'frozenbox';
@@ -1351,7 +1404,9 @@ function openWhatsApp() {
   let deliveryDateLine = '';
   if (isFrozenBox) {
     deliveryDateLine = `\nEstimated Arrival (Frozen Box Delivery): ${getDeliveryDateValue()}`;
-  } else if (!isPickup) {
+  } else if (isPickup) {
+    deliveryDateLine = `\nEstimated Self Pickup Date: ${getDeliveryDateValue()}`;
+  } else {
     deliveryDateLine = `\nEstimated Arrival: ${getDeliveryDateValue()}`;
   }
 
@@ -1403,6 +1458,7 @@ function showToast(msg) {
 
 updateNav();
 applyCutoffStates();
+applyPromoStates();
 </script>
 </body>
 </html>
