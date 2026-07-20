@@ -14,6 +14,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
   .header { background: var(--green); padding: 22px 20px 18px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .header-brand { font-size: 22px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
+  .header-brand span { color: var(--green-light); }
   .header-logo { height: auto; width: 100%; max-width: 260px; object-fit: contain; display: inline-block; }
   .header-sub { font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 8px; }
   .progress-bar { background: var(--white); padding: 12px 20px; display: flex; gap: 0; border-bottom: 1px solid var(--border); }
@@ -34,8 +36,6 @@
   .menu-item.has-qty { border-color: var(--green-light); background: #EEF5FB; }
   .menu-item.cutoff { opacity: 0.5; }
   .menu-item.cutoff .qty-btn { cursor: not-allowed; color: var(--ink-mute); }
-  .item-price .promo-strike { text-decoration: line-through; color: var(--ink-mute); font-weight: 500; margin-right: 6px; font-size: 12px; }
-  .promo-label { font-size: 10px; font-weight: 700; color: var(--red); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
   .cutoff-label { font-size: 11px; font-weight: 700; color: var(--red); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
   .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
@@ -103,6 +103,7 @@
   .btn-primary { background: var(--green); color: var(--white); }
   .btn-secondary { background: var(--green-pale); color: var(--green); flex: 0 0 auto; width: 52px; }
   .btn-submit { background: var(--green); color: var(--white); width: 100%; }
+  .btn-disabled { background: var(--border); color: var(--ink-mute); cursor: not-allowed; }
   .btn-wa { background: #25D366; color: var(--white); }
   .cart-badge { position: fixed; bottom: 80px; right: 16px; background: var(--green); color: var(--white); border-radius: 50px; padding: 10px 16px; font-size: 13px; font-weight: 700; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(45,106,79,0.35); cursor: pointer; z-index: 50; -webkit-tap-highlight-color: transparent; }
   .cart-badge.visible { display: flex; }
@@ -341,8 +342,7 @@
   <div class="menu-item" id="item-15">
     <div class="item-info">
       <div class="item-name">Mix Chicken Chop (10 pcs)</div>
-      <div class="item-price" id="item-price-15">RM 110.00</div>
-      <div class="promo-label" id="promo-label-15" style="display:none;"></div>
+      <div class="item-price">RM 110.00</div>
     </div>
     <div class="qty-ctrl">
       <button class="qty-btn" onclick="changeQty(15,-1)">−</button>
@@ -430,10 +430,10 @@
     </div>
   </div>
 
-  <div class="category-label">Custom Meal Prep</div>
-  <div class="note">Bina pakej anda sendiri. Min order: <strong>20 pack</strong>, seterusnya dalam gandaan 20 (20, 40, 60...). <strong>2 flavor dibenarkan setiap 20 pack</strong> (cth: 40 pack = 4 flavor). Default packing: Vacuum Pack. Pilihan upgrade ke Bento Pack dengan tambahan RM1/pack.<span class="en">Build your own package. Minimum order: 20 packs, then in multiples of 20 (20, 40, 60...). 2 flavours allowed per 20 packs (e.g. 40 packs = 4 flavours). Default packing: Vacuum Pack. Option to upgrade to Bento Pack for an extra RM1/pack.</span></div>
+  <div class="category-label">Custom Protein</div>
+  <div class="note">Bina pakej anda sendiri. Kuantiti: <strong>20, 40, 60 atau 80 pack/jenis</strong>. Setiap 20 pack, boleh pilih 1 tambahan flavour (20 pack = 2 flavour, 40 pack = 4 flavour, dan seterusnya). Default packing: Vacuum Pack. Pilihan upgrade ke Bento Pack dengan tambahan RM1/pack.<span class="en">Build your own package. Quantity: 20, 40, 60 or 80 packs per protein type. For every 20 packs, you may choose 2 flavours (20 packs = 2 flavours, 40 packs = 4 flavours, and so on). Default packing: Vacuum Pack. Option to upgrade to Bento Pack for an extra RM1/pack.</span></div>
   <div id="custom-meals-container"></div>
-  <button class="add-custom-btn" onclick="addCustomMeal()">+ Tambah Custom Meal / <span class="en" style="color:inherit;">Add Custom Meal</span></button>
+  <button class="add-custom-btn" onclick="addCustomMeal()">+ Tambah Custom Protein / <span class="en" style="color:inherit;">Add Custom Protein</span></button>
 
   <div class="page-spacer"></div>
 </div>
@@ -483,7 +483,8 @@
       <div class="field-label">Alamat Penghantaran *</div>
       <textarea id="cust-address" placeholder="No, Jalan, Taman, Poskod, Negeri"></textarea>
     </div>
-    <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span><div id="pickup-date-estimate" class="delivery-badge" style="margin-top:8px;">Anggaran Self Pickup: sedang dikira...</div></div>
+    <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
+    <div id="pickup-estimate" class="delivery-badge" style="display:none;">Anggaran tarikh sedia diambil: sedang dikira...</div>
     <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM75</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.<span class="en">Frozen Box Delivery charges range from RM45 to RM75, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.</span></div>
   </div>
 
@@ -561,9 +562,28 @@
     </div>
   </div>
 
-  <div class="info-card" style="margin-top:8px;">
-    <div class="info-card-title">Selepas Bayar</div>
-    <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Sila hantar <strong>screenshot bukti pembayaran</strong> kepada kami melalui WhatsApp. Pesanan anda akan diproses selepas pembayaran disahkan.<span class="en">Please send the <strong>payment proof screenshot</strong> to us via WhatsApp. Your order will be processed once payment is confirmed.</span></p>
+  <div class="summary-card" style="margin-top:8px;text-align:left;">
+    <div class="summary-row" style="align-items:flex-start;">
+      <span style="font-size:22px;margin-right:4px;">1️⃣</span>
+      <span class="label" style="color:var(--ink);">
+        <strong>Hantar pesanan kepada kami</strong><br>
+        <span style="font-size:12px;color:var(--ink-mute);">Tekan butang "Hantar Pesanan" di bawah untuk menghantar ringkasan pesanan anda terus kepada admin Dietliciouss melalui WhatsApp.<span class="en" style="display:block;margin-top:3px;">Tap the "Send Order" button below to send your order summary straight to the Dietliciouss admin via WhatsApp.</span></span>
+      </span>
+    </div>
+    <div class="summary-row" style="align-items:flex-start;">
+      <span style="font-size:22px;margin-right:4px;">2️⃣</span>
+      <span class="label" style="color:var(--ink);">
+        <strong>Tunggu pengesahan daripada kami</strong><br>
+        <span style="font-size:12px;color:var(--ink-mute);">Admin kami akan mengesahkan pesanan dan menghantar QR DuitNow atau maklumat pembayaran kepada anda.<span class="en" style="display:block;margin-top:3px;">Our admin will confirm your order and send you the DuitNow QR or payment details.</span></span>
+      </span>
+    </div>
+    <div class="summary-row" style="align-items:flex-start;border-bottom:none;">
+      <span style="font-size:22px;margin-right:4px;">3️⃣</span>
+      <span class="label" style="color:var(--ink);">
+        <strong>Buat pembayaran & hantar bukti</strong><br>
+        <span style="font-size:12px;color:var(--ink-mute);">Selesaikan pembayaran dan hantar screenshot bukti bayaran kepada kami. Pesanan akan diproses dalam masa 3–5 hari bekerja.<span class="en" style="display:block;margin-top:3px;">Complete payment and send us the payment proof screenshot. Your order will be processed within 3–5 working days.</span></span>
+      </span>
+    </div>
   </div>
 
   <div class="page-spacer"></div>
@@ -573,27 +593,19 @@
 <div class="page" id="page5">
   <div class="success-screen">
     <div class="success-icon">✅</div>
-    <div class="success-sub">Sila ikuti langkah berikut untuk melengkapkan proses pembelian.<span class="en" style="display:block;margin-top:4px;">Please follow the steps below to complete your purchase.</span></div>
-
-    <button class="btn btn-wa" style="width:100%;margin-bottom:16px;" onclick="openWhatsApp()">Hantar Pesanan via WhatsApp<span class="en btn-en">Send Order via WhatsApp</span></button>
+    <div class="success-title">Pesanan Anda Telah Dihantar!</div>
+    <div class="success-sub">Ringkasan pesanan anda telah dihantar kepada admin kami melalui WhatsApp. Sila ikuti langkah berikut untuk melengkapkan proses pembelian.<span class="en" style="display:block;margin-top:4px;">Your order summary has been sent to our admin via WhatsApp. Please follow the steps below to complete your purchase.</span></div>
 
     <div class="summary-card" style="text-align:left;margin-bottom:16px;">
       <div class="summary-row" style="align-items:flex-start;">
         <span style="font-size:22px;margin-right:4px;">1️⃣</span>
-        <span class="label" style="color:var(--ink);">
-          <strong>Hantar pesanan kepada kami</strong><br>
-          <span style="font-size:12px;color:var(--ink-mute);">Tekan butang WhatsApp di atas untuk menghantar ringkasan pesanan anda kepada admin Dietliciouss.<span class="en" style="display:block;margin-top:3px;">Tap the WhatsApp button above to send your order summary to the Dietliciouss admin.</span></span>
-        </span>
-      </div>
-      <div class="summary-row" style="align-items:flex-start;">
-        <span style="font-size:22px;margin-right:4px;">2️⃣</span>
         <span class="label" style="color:var(--ink);">
           <strong>Tunggu pengesahan daripada kami</strong><br>
           <span style="font-size:12px;color:var(--ink-mute);">Admin kami akan mengesahkan pesanan dan menghantar QR DuitNow atau maklumat pembayaran kepada anda.<span class="en" style="display:block;margin-top:3px;">Our admin will confirm your order and send you the DuitNow QR or payment details.</span></span>
         </span>
       </div>
       <div class="summary-row" style="align-items:flex-start;border-bottom:none;">
-        <span style="font-size:22px;margin-right:4px;">3️⃣</span>
+        <span style="font-size:22px;margin-right:4px;">2️⃣</span>
         <span class="label" style="color:var(--ink);">
           <strong>Buat pembayaran & hantar bukti</strong><br>
           <span style="font-size:12px;color:var(--ink-mute);">Selesaikan pembayaran dan hantar screenshot bukti bayaran kepada kami. Pesanan akan diproses dalam masa 3–5 hari bekerja.<span class="en" style="display:block;margin-top:3px;">Complete payment and send us the payment proof screenshot. Your order will be processed within 3–5 working days.</span></span>
@@ -717,58 +729,16 @@ const PRODUCTS = [
   { name: '30 Days Breakfast Package', price: 319 },
 ];
 
-// ============================================================
-// PROMOTIONS (time-limited discounts)
-// ============================================================
-// Format: 'YYYY-MM-DDTHH:MM:SS' in Malaysia time (Asia/Kuala_Lumpur, UTC+8).
-// Discount automatically stops applying after `until` - price reverts to the
-// normal PRODUCTS price with no further action needed.
-const PROMOS = {
-  15: { discount: 10, until: '2026-07-19T23:59:59', label: 'PROMO -RM10 (sehingga 19/7)' }, // Mix Chicken Chop
-};
-
-function isPromoActive(productIndex) {
-  const promo = PROMOS[productIndex];
-  if (!promo) return false;
-  const nowMY = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
-  const untilDate = new Date(promo.until);
-  return nowMY <= untilDate;
-}
-
-// The one place price is looked up - promo-aware. Every total/line-item
-// calculation should go through this instead of reading PRODUCTS[i].price directly.
-function getEffectivePrice(productIndex) {
-  const base = PRODUCTS[productIndex].price;
-  if (isPromoActive(productIndex)) {
-    return Math.max(0, base - PROMOS[productIndex].discount);
-  }
-  return base;
-}
-
-function applyPromoStates() {
-  Object.keys(PROMOS).forEach(idxStr => {
-    const idx = parseInt(idxStr);
-    const promo = PROMOS[idx];
-    const priceEl = document.getElementById('item-price-' + idx);
-    const labelEl = document.getElementById('promo-label-' + idx);
-    if (!priceEl) return;
-    if (isPromoActive(idx)) {
-      const base = PRODUCTS[idx].price;
-      const effective = getEffectivePrice(idx);
-      priceEl.innerHTML = `<span class="promo-strike">RM ${base.toFixed(2)}</span>RM ${effective.toFixed(2)}`;
-      if (labelEl) { labelEl.textContent = promo.label; labelEl.style.display = 'block'; }
-    } else {
-      priceEl.textContent = 'RM ' + PRODUCTS[idx].price.toFixed(2);
-      if (labelEl) labelEl.style.display = 'none';
-    }
-  });
-}
-
 const PROTEIN_OPTIONS = [
   { name: 'Chicken Breast', type: 'weight', pricePer100g: 8 },
   { name: 'Salmon Fillet', type: 'fillet', pricePerFillet: 22 }
 ];
 const WEIGHT_OPTIONS = [100, 150, 200, 250, 300, 350];
+const QUANTITY_OPTIONS = [20, 40, 60, 80];
+function getMaxFlavours(meal) {
+  const packs = parseInt(meal.proteinPacks) || 20;
+  return Math.max(2, Math.round(packs / 20) * 2);
+}
 const FLAVOURS = ['Honey BBQ', 'BBQ', 'Blackpepper', 'Honey Mustard', 'Teriyaki', 'Cajun', 'Lemon Cajun', 'Spicy Garlic', 'Spicy Thai'];
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYU-8qM8wIsjCjKtG92e7_55rI_1kUXwHbH2b7fUU53-KGM2kaKkNVT03EEe3wVIvc/exec';
 
@@ -792,16 +762,22 @@ function changeQty(idx, delta) {
   updateBadge();
 }
 
+function getActiveCustomMeals() {
+  // A Custom Protein form only counts once a protein has actually been picked.
+  // An untouched default form (shown automatically) is ignored until then.
+  return customMeals.filter(m => m.protein);
+}
+
 function getCartTotal() {
   let total = 0;
-  quantities.forEach((q, i) => total += q * getEffectivePrice(i));
+  quantities.forEach((q, i) => total += q * PRODUCTS[i].price);
   customMeals.forEach(m => total += getCustomMealPrice(m));
   return total;
 }
 
 function getCartCount() {
   let count = quantities.reduce((a, b) => a + b, 0);
-  count += customMeals.length;
+  count += getActiveCustomMeals().length;
   return count;
 }
 
@@ -834,36 +810,23 @@ function addCustomMeal() {
 
 function removeCustomMeal(id) {
   customMeals = customMeals.filter(m => m.id !== id);
+  if (customMeals.length === 0) {
+    // Always keep at least one Custom Protein form visible
+    addCustomMeal();
+    return;
+  }
   renderCustomMeals();
   updateBadge();
-}
-
-// Pack rule: minimum 20 packs, and must go up in steps of 20 (20, 40, 60, ...).
-function normalizePackCount(val) {
-  const n = parseInt(val) || 0;
-  return Math.max(20, Math.round(n / 20) * 20);
-}
-
-// Flavour rule: 2 flavours allowed per 20 packs (20→2, 40→4, 60→6, ...).
-function getMaxFlavours(meal) {
-  const packs = normalizePackCount(meal.proteinPacks);
-  return Math.floor(packs / 20) * 2;
 }
 
 function updateCustomMeal(id, field, val) {
   const meal = customMeals.find(m => m.id === id);
   if (!meal) return;
-
-  if (field === 'proteinPacks') {
-    val = normalizePackCount(val);
-    // If packs went down, trim any flavours beyond the new allowance.
-    const maxFlavours = Math.floor(val / 20) * 2;
-    if (meal.flavours.length > maxFlavours) {
-      meal.flavours = meal.flavours.slice(0, maxFlavours);
-    }
-  }
-
   meal[field] = val;
+  if (field === 'proteinPacks') {
+    const max = getMaxFlavours(meal);
+    if (meal.flavours.length > max) meal.flavours = meal.flavours.slice(0, max);
+  }
   renderCustomMeals();
   updateBadge();
 }
@@ -872,9 +835,10 @@ function toggleFlavour(id, flavour) {
   const meal = customMeals.find(m => m.id === id);
   if (!meal) return;
   const idx = meal.flavours.indexOf(flavour);
+  const max = getMaxFlavours(meal);
   if (idx > -1) {
     meal.flavours.splice(idx, 1);
-  } else if (meal.flavours.length < getMaxFlavours(meal)) {
+  } else if (meal.flavours.length < max) {
     meal.flavours.push(flavour);
   }
   renderCustomMeals();
@@ -904,12 +868,13 @@ function renderCustomMeals() {
     const p = PROTEIN_OPTIONS.find(x => x.name === meal.protein);
     const isWeight = p && p.type === 'weight';
     const price = getCustomMealPrice(meal);
+    const maxFlavours = getMaxFlavours(meal);
 
     const div = document.createElement('div');
     div.className = 'custom-section';
     div.innerHTML = `
       <div class="custom-section-title">
-        💪 Custom Meal ${i + 1}
+        Custom Protein ${i + 1}
         <button class="remove-btn" onclick="removeCustomMeal(${meal.id})">✕</button>
       </div>
 
@@ -931,14 +896,18 @@ function renderCustomMeals() {
           </select>
         </div>
         <div>
-          <div class="field-label">Bilangan pack (20, 40, 60...)</div>
-          <input type="number" min="20" step="20" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+          <div class="field-label">Bilangan Pack (20, 40, 60, 80)</div>
+          <select onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+            ${QUANTITY_OPTIONS.map(q => `<option value="${q}" ${meal.proteinPacks==q?'selected':''}>${q}</option>`).join('')}
+          </select>
         </div>
       </div>` : (meal.protein ? `
       <div class="custom-row full" style="margin-top:10px;">
         <div>
-          <div class="field-label">Bilangan pack (20, 40, 60...)</div>
-          <input type="number" min="20" step="20" value="${meal.proteinPacks}" onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+          <div class="field-label">Bilangan Pack (20, 40, 60, 80)</div>
+          <select onchange="updateCustomMeal(${meal.id},'proteinPacks',this.value)">
+            ${QUANTITY_OPTIONS.map(q => `<option value="${q}" ${meal.proteinPacks==q?'selected':''}>${q}</option>`).join('')}
+          </select>
         </div>
       </div>` : '')}
 
@@ -954,12 +923,12 @@ function renderCustomMeals() {
         </div>
       </div>
 
-      <div class="field-label" style="margin-top:12px;margin-bottom:6px;">Flavour (2 flavor setiap 20 pack)<span class="en" style="display:block;font-weight:400;">2 flavours per 20 packs</span></div>
-      <div class="flavour-hint">Dipilih: ${meal.flavours.length}/${getMaxFlavours(meal)}</div>
+      <div class="field-label" style="margin-top:12px;margin-bottom:6px;">Flavour (max ${maxFlavours})</div>
+      <div class="flavour-hint">Dipilih: ${meal.flavours.length}/${maxFlavours}</div>
       <div class="flavour-grid">
         ${FLAVOURS.map(f => {
           const isSelected = meal.flavours.includes(f);
-          const isMaxed = meal.flavours.length >= getMaxFlavours(meal) && !isSelected;
+          const isMaxed = meal.flavours.length >= maxFlavours && !isSelected;
           return `<div class="flavour-chip ${isSelected?'selected':''} ${isMaxed?'maxed':''}" onclick="toggleFlavour(${meal.id},'${f}')">${f}</div>`;
         }).join('')}
       </div>
@@ -974,10 +943,11 @@ function renderCustomMeals() {
 
 function renderCartSummary() {
   const container = document.getElementById('cart-summary');
-  const items = quantities.map((q, i) => ({ ...PRODUCTS[i], idx: i, qty: q, price: getEffectivePrice(i) })).filter(p => p.qty > 0);
+  const items = quantities.map((q, i) => ({ ...PRODUCTS[i], qty: q })).filter(p => p.qty > 0);
+  const activeMeals = getActiveCustomMeals();
   const total = getCartTotal();
 
-  if (items.length === 0 && customMeals.length === 0) {
+  if (items.length === 0 && activeMeals.length === 0) {
     container.innerHTML = `<div class="empty-cart"><div class="icon">🛒</div>Tiada item dalam pesanan anda.<br>Sila kembali ke menu untuk membuat pilihan.</div>`;
     return;
   }
@@ -985,15 +955,14 @@ function renderCartSummary() {
   let html = '<div class="summary-card">';
   items.forEach(item => {
     const subtotal = item.qty * item.price;
-    const promoTag = isPromoActive(item.idx) ? ` · <span style="color:var(--red);font-weight:700;">PROMO</span>` : '';
-    html += `<div class="summary-row"><span class="label">${item.name}<br><small style="color:var(--ink-mute)">RM${item.price.toFixed(2)} × ${item.qty}${promoTag}</small></span><span class="val">RM ${subtotal.toFixed(2)}</span></div>`;
+    html += `<div class="summary-row"><span class="label">${item.name}<br><small style="color:var(--ink-mute)">RM${item.price.toFixed(2)} × ${item.qty}</small></span><span class="val">RM ${subtotal.toFixed(2)}</span></div>`;
   });
-  customMeals.forEach((meal, i) => {
-    const proteinDesc = meal.protein ? (PROTEIN_OPTIONS.find(x=>x.name===meal.protein)?.type==='weight' ? `${meal.protein} ${meal.weight}g × ${meal.proteinPacks}` : `${meal.protein} × ${meal.proteinPacks}`) : '?';
+  activeMeals.forEach((meal, i) => {
+    const proteinDesc = PROTEIN_OPTIONS.find(x=>x.name===meal.protein)?.type==='weight' ? `${meal.protein} ${meal.weight}g × ${meal.proteinPacks}` : `${meal.protein} × ${meal.proteinPacks}`;
     const packingDesc = meal.packing === 'bento' ? 'Bento Pack (+RM1/pack)' : 'Vacuum Pack';
     const desc = [proteinDesc, packingDesc].filter(Boolean).join('<br>');
     const cmPrice = getCustomMealPrice(meal);
-    html += `<div class="summary-row"><span class="label">Custom Meal ${i+1}<br><small style="color:var(--ink-mute)">${desc}</small></span><span class="val">RM ${cmPrice.toFixed(2)}</span></div>`;
+    html += `<div class="summary-row"><span class="label">Custom Protein ${i+1}<br><small style="color:var(--ink-mute)">${desc}</small></span><span class="val">RM ${cmPrice.toFixed(2)}</span></div>`;
   });
   html += `<div class="summary-total"><span class="t-label">Jumlah</span><span class="t-val">RM ${total.toFixed(2)}</span></div>`;
   html += '</div>';
@@ -1002,8 +971,24 @@ function renderCartSummary() {
   document.getElementById('final-total').textContent = 'RM ' + total.toFixed(2);
 }
 
-// Shared helper - both getDeliveryEstimate() and getDeliveryDateValue() used to
-// duplicate this exact date-crunching logic. Now there is one source of truth.
+function getDeliveryEstimate() {
+  const fixed = getFixedDeliveryDateForCart();
+  if (fixed && fixed.length > 0) {
+    const dateStr = fixed.map(f => f.bm).join(' / ');
+    return `Tarikh Delivery/Self Pickup: ${dateStr} (Budget Diet Meal)`;
+  }
+  const today = new Date();
+  let workdays = 0, d = new Date(today);
+  while (workdays < 5) {
+    d.setDate(d.getDate() + 1);
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) workdays++;
+  }
+  const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+  const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
+  return `Anggaran tiba: ${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 function getDeliveryDateValue() {
   const fixed = getFixedDeliveryDateForCart();
   if (fixed && fixed.length > 0) {
@@ -1019,14 +1004,6 @@ function getDeliveryDateValue() {
   const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
   const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function getDeliveryEstimate() {
-  const fixed = getFixedDeliveryDateForCart();
-  if (fixed && fixed.length > 0) {
-    return `Tarikh Delivery/Self Pickup: ${getDeliveryDateValue()} (Budget Diet Meal)`;
-  }
-  return `Anggaran tiba: ${getDeliveryDateValue()}`;
 }
 
 // ============================================================
@@ -1215,13 +1192,7 @@ function goToPage(n) {
   window.scrollTo(0, 0);
 
   if (n === 2) renderCartSummary();
-  if (n === 3) {
-    document.getElementById('delivery-estimate').textContent = getDeliveryEstimate();
-    updateDeliveryStatus();
-    if (receiveMethod === 'pickup') {
-      document.getElementById('pickup-date-estimate').textContent = 'Anggaran Self Pickup: ' + getDeliveryDateValue();
-    }
-  }
+  if (n === 3) { document.getElementById('delivery-estimate').textContent = getDeliveryEstimate(); updateDeliveryStatus(); updatePickupEstimate(); }
   if (n === 4) { updateFrozenBoxChargeDisplay(); document.getElementById('final-total').textContent = 'RM ' + getGrandTotal().toFixed(2); }
 
   for (let i = 1; i <= 4; i++) {
@@ -1244,7 +1215,7 @@ function updateNav() {
   btnBack.style.display = currentPage > 1 ? 'block' : 'none';
 
   if (currentPage === 4) {
-    btnNext.innerHTML = 'Hantar Order<span class="en btn-en">Submit Order</span>';
+    btnNext.innerHTML = 'Hantar Pesanan<span class="en btn-en">Send Order</span>';
     btnNext.className = 'btn btn-primary';
   } else if (currentPage === 1) {
     btnNext.innerHTML = 'Semak Pesanan →<span class="en btn-en">Review Order</span>';
@@ -1275,12 +1246,9 @@ function validateCustomMeals() {
   for (let i = 0; i < customMeals.length; i++) {
     const m = customMeals[i];
     const n = i + 1;
-    const packs = parseInt(m.proteinPacks) || 0;
-    if (!m.protein) { showToast(`Custom Meal ${n}: sila pilih protein.`); return false; }
-    if (packs < 20) { showToast(`Custom Meal ${n}: protein minimum 20 pack.`); return false; }
-    if (packs % 20 !== 0) { showToast(`Custom Meal ${n}: bilangan pack mesti gandaan 20 (20, 40, 60...).`); return false; }
-    if (m.flavours.length === 0) { showToast(`Custom Meal ${n}: sila pilih sekurang-kurangnya 1 flavour.`); return false; }
-    if (m.flavours.length > getMaxFlavours(m)) { showToast(`Custom Meal ${n}: maksimum ${getMaxFlavours(m)} flavour untuk ${packs} pack.`); return false; }
+    if (!m.protein) continue; // untouched/default form — not part of the order yet
+    if (!QUANTITY_OPTIONS.includes(parseInt(m.proteinPacks))) { showToast(`Custom Protein ${n}: sila pilih bilangan pack (20, 40, 60 atau 80).`); return false; }
+    if (m.flavours.length === 0) { showToast(`Custom Protein ${n}: sila pilih sekurang-kurangnya 1 flavour.`); return false; }
   }
   return true;
 }
@@ -1317,14 +1285,21 @@ function setReceiveMethod(method) {
   document.getElementById('delivery-info-card').style.display = needsAddress ? 'block' : 'none';
   document.getElementById('frozenbox-note').style.display = (method === 'frozenbox') ? 'block' : 'none';
   document.getElementById('pickup-note').style.display = (method === 'pickup') ? 'block' : 'none';
+  document.getElementById('pickup-estimate').style.display = (method === 'pickup') ? 'flex' : 'none';
   document.getElementById('lalamove-free-note').style.display = (method === 'delivery') ? 'block' : 'none';
   if (needsAddress) {
     document.getElementById('delivery-estimate').textContent = getDeliveryEstimate();
     updateDeliveryStatus();
   }
   if (method === 'pickup') {
-    document.getElementById('pickup-date-estimate').textContent = 'Anggaran Self Pickup: ' + getDeliveryDateValue();
+    updatePickupEstimate();
   }
+}
+
+function updatePickupEstimate() {
+  const el = document.getElementById('pickup-estimate');
+  if (!el) return;
+  el.innerHTML = `Anggaran tarikh sedia diambil: <strong>${getDeliveryDateValue()}</strong><span class="en" style="display:block;margin-top:2px;">Estimated ready for pickup: ${getDeliveryDateValue()}</span>`;
 }
 
 function buildCustomMealLines() {
@@ -1356,7 +1331,7 @@ function submitOrder() {
   const address = document.getElementById('cust-address').value.trim();
   const notes = document.getElementById('cust-notes').value.trim();
 
-  const items = quantities.map((q, i) => q > 0 ? `${PRODUCTS[i].name} x${q} = RM${(q*getEffectivePrice(i)).toFixed(2)}` : null).filter(Boolean);
+  const items = quantities.map((q, i) => q > 0 ? `${PRODUCTS[i].name} x${q} = RM${(q*PRODUCTS[i].price).toFixed(2)}` : null).filter(Boolean);
   const customLines = buildCustomMealLines();
   const allItems = [...items, ...customLines].join('\n');
   const isFrozenBoxSubmit = receiveMethod === 'frozenbox';
@@ -1380,6 +1355,7 @@ function submitOrder() {
   const img = new Image();
   img.src = APPS_SCRIPT_URL + '?' + params.toString();
 
+  openWhatsApp();
   goToPage(5);
 }
 
@@ -1390,12 +1366,12 @@ function openWhatsApp() {
   const notes = document.getElementById('cust-notes').value.trim();
 
   const items = quantities.map((q, i) => q > 0 ? `• ${PRODUCTS[i].name} x${q}` : null).filter(Boolean);
-  const customLines = customMeals.map((m, i) => {
+  const customLines = getActiveCustomMeals().map((m, i) => {
     const p = PROTEIN_OPTIONS.find(x => x.name === m.protein);
-    const proteinDesc = p ? (p.type === 'weight' ? `${m.protein} ${m.weight}g x${m.proteinPacks}` : `${m.protein} x${m.proteinPacks}`) : '?';
+    const proteinDesc = p.type === 'weight' ? `${m.protein} ${m.weight}g x${m.proteinPacks}` : `${m.protein} x${m.proteinPacks}`;
     const packingDesc = m.packing === 'bento' ? 'Bento Pack (+RM1/pack)' : 'Vacuum Pack';
     const flav = m.flavours.join(' + ') || '-';
-    return `• Custom Meal ${i+1}: ${proteinDesc} | ${packingDesc} (${flav})`;
+    return `• Custom Protein ${i+1}: ${proteinDesc} | ${packingDesc} (${flav})`;
   });
   const allLines = [...items, ...customLines].join('\n');
   const isPickup = receiveMethod === 'pickup';
@@ -1405,7 +1381,7 @@ function openWhatsApp() {
   if (isFrozenBox) {
     deliveryDateLine = `\nEstimated Arrival (Frozen Box Delivery): ${getDeliveryDateValue()}`;
   } else if (isPickup) {
-    deliveryDateLine = `\nEstimated Self Pickup Date: ${getDeliveryDateValue()}`;
+    deliveryDateLine = `\nEstimated Ready for Pickup: ${getDeliveryDateValue()}`;
   } else {
     deliveryDateLine = `\nEstimated Arrival: ${getDeliveryDateValue()}`;
   }
@@ -1440,7 +1416,7 @@ function resetOrder() {
     document.getElementById('qty-' + i).textContent = '0';
     document.getElementById('item-' + i).classList.remove('has-qty');
   }
-  renderCustomMeals();
+  addCustomMeal();
   document.getElementById('cust-name').value = '';
   document.getElementById('cust-phone').value = '';
   document.getElementById('cust-address').value = '';
@@ -1456,9 +1432,9 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+addCustomMeal();
 updateNav();
 applyCutoffStates();
-applyPromoStates();
 </script>
 </body>
 </html>
