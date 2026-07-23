@@ -548,6 +548,22 @@
     </div>
   </div>
 
+  <div class="info-card" style="margin-top:4px;">
+    <div class="info-card-title">Kod Promo <span class="en" style="font-weight:400;">/ Promo Code</span></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="promo-input" placeholder="Masukkan kod promo" style="flex:1;">
+      <button type="button" class="btn btn-secondary" style="width:auto;padding:0 16px;" onclick="applyPromoCode()">Guna</button>
+    </div>
+    <div id="promo-message" style="font-size:12px;margin-top:8px;"></div>
+  </div>
+
+  <div class="summary-card" id="promo-discount-card" style="margin-top:4px;display:none;">
+    <div class="summary-row">
+      <span class="label">Diskaun Promo<span class="en" style="display:block;font-size:11px;">Promo Discount</span></span>
+      <span class="val" id="promo-discount-val" style="color:var(--red);">- RM 0.00</span>
+    </div>
+  </div>
+
   <div class="summary-card" id="frozenbox-charge-card" style="margin-top:4px;display:none;">
     <div class="summary-row">
       <span class="label">Caj Penghantaran (Frozen Box)<span class="en" style="display:block;font-size:11px;">Frozen Box Delivery Charge</span></span>
@@ -703,7 +719,7 @@ function applyCutoffStates() {
 
 const PRODUCTS = [
   { name: 'Budget Diet Meal Week 2', price: 100 },
-  { name: 'Value Breakfast', price: 100 },
+  { name: 'Breakfast Value Meal', price: 100 },
   { name: '7 Days Lunch/Dinner Meals (Bento)', price: 130 },
   { name: '2MAD (7 Brunch + 7 Dinner)', price: 214 },
   { name: '7 Days Breakfast', price: 84 },
@@ -748,6 +764,24 @@ let currentPage = 1;
 let paymentMethod = 'qr';
 let receiveMethod = 'delivery';
 let customMealCounter = 0;
+
+// ============================================================
+// PROMO CODE (10% discount, min RM110 spend on products/packages
+// only — delivery/frozen box charges are excluded, max 30 uses)
+// ============================================================
+const PROMO_CODE = 'PROMO10%';
+const PROMO_MIN_SPEND = 110;
+const PROMO_MAX_USES = 30;
+const PROMO_USES_KEY = 'dl_promo10_uses';
+let promoApplied = false;
+
+function getPromoUsesCount() {
+  return parseInt(localStorage.getItem(PROMO_USES_KEY) || '0', 10);
+}
+
+function incrementPromoUses() {
+  localStorage.setItem(PROMO_USES_KEY, String(getPromoUsesCount() + 1));
+}
 
 function changeQty(idx, delta) {
   if (delta > 0 && isPastCutoff(idx)) {
@@ -1096,7 +1130,7 @@ function updateDeliveryStatus() {
 // ============================================================
 // Tiers (highest applicable tier wins, no stacking, except 2MAD/box and RM75 combine):
 //   RM45 - up to 4x protein-type packs, 2x custom packs, 1x each of
-//          7 Days Breakfast / Sourdough Muffin / Wholemeal Wrap / Mix Carbs / Value Breakfast
+//          7 Days Breakfast / Sourdough Muffin / Wholemeal Wrap / Mix Carbs / Breakfast Value Meal
 //   RM55 - 1x Bento, 1x Budget Diet Meal (any week) ONLY, OR RM45-tier qty exceeded ONLY (not combined)
 //   RM65 - 1x 2MAD OR 1x 30 Days Breakfast Package (each additional set adds another RM65 box)
 //   RM90 - 1x 2MAD TOGETHER WITH 1x 30 Days Breakfast Package (combo flat rate, extra sets +RM65 each)
@@ -1177,10 +1211,75 @@ function updateFrozenBoxChargeDisplay() {
   }
 }
 
+function getDiscount() {
+  if (!promoApplied) return 0;
+  const subtotal = getCartTotal();
+  if (subtotal < PROMO_MIN_SPEND) return 0;
+  return subtotal * 0.10;
+}
+
 function getGrandTotal() {
   const base = getCartTotal();
+  const discount = getDiscount();
   const fbCharge = receiveMethod === 'frozenbox' ? getFrozenBoxCharge() : 0;
-  return base + fbCharge;
+  return base - discount + fbCharge;
+}
+
+function applyPromoCode() {
+  const input = document.getElementById('promo-input');
+  const msgEl = document.getElementById('promo-message');
+  const code = input.value.trim().toUpperCase();
+  const subtotal = getCartTotal();
+
+  if (!code) {
+    promoApplied = false;
+    msgEl.textContent = 'Sila masukkan kod promo.';
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+  if (code !== PROMO_CODE.toUpperCase()) {
+    promoApplied = false;
+    msgEl.textContent = 'Kod promo tidak sah.';
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+  if (getPromoUsesCount() >= PROMO_MAX_USES) {
+    promoApplied = false;
+    msgEl.textContent = 'Kod promo ini telah mencapai had penggunaan.';
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+  if (subtotal < PROMO_MIN_SPEND) {
+    promoApplied = false;
+    msgEl.textContent = `Pembelian minimum RM${PROMO_MIN_SPEND.toFixed(2)} (produk & pakej, tidak termasuk caj penghantaran) diperlukan untuk kod ini.`;
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+
+  promoApplied = true;
+  msgEl.textContent = 'Kod promo berjaya digunakan! Diskaun 10% telah diberikan.';
+  msgEl.style.color = 'var(--green)';
+  updatePromoDisplay();
+}
+
+function updatePromoDisplay() {
+  const card = document.getElementById('promo-discount-card');
+  const val = document.getElementById('promo-discount-val');
+  if (card && val) {
+    const discount = getDiscount();
+    if (promoApplied && discount > 0) {
+      card.style.display = 'block';
+      val.textContent = '- RM ' + discount.toFixed(2);
+    } else {
+      card.style.display = 'none';
+    }
+  }
+  const finalTotalEl = document.getElementById('final-total');
+  if (finalTotalEl) finalTotalEl.textContent = 'RM ' + getGrandTotal().toFixed(2);
 }
 
 function goToPage(n) {
@@ -1193,7 +1292,7 @@ function goToPage(n) {
 
   if (n === 2) renderCartSummary();
   if (n === 3) { document.getElementById('delivery-estimate').textContent = getDeliveryEstimate(); updateDeliveryStatus(); updatePickupEstimate(); }
-  if (n === 4) { updateFrozenBoxChargeDisplay(); document.getElementById('final-total').textContent = 'RM ' + getGrandTotal().toFixed(2); }
+  if (n === 4) { updateFrozenBoxChargeDisplay(); updatePromoDisplay(); }
 
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('step' + i);
@@ -1336,7 +1435,9 @@ function submitOrder() {
   const allItems = [...items, ...customLines].join('\n');
   const isFrozenBoxSubmit = receiveMethod === 'frozenbox';
   const fbCharge = isFrozenBoxSubmit ? getFrozenBoxCharge() : 0;
+  const discount = getDiscount();
   const grandTotal = getGrandTotal();
+  const promoUsed = promoApplied && discount > 0;
 
   const isPickup = receiveMethod === 'pickup';
   const params = new URLSearchParams({
@@ -1345,6 +1446,8 @@ function submitOrder() {
     notes,
     items: allItems,
     frozenBoxCharge: isFrozenBoxSubmit ? ('RM ' + fbCharge.toFixed(2)) : '',
+    promoCode: promoUsed ? PROMO_CODE : '',
+    discount: promoUsed ? ('RM ' + discount.toFixed(2)) : '',
     total: 'RM ' + grandTotal.toFixed(2),
     payment: paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)',
     deliveryMethod: isPickup ? 'Self Pickup' : (isFrozenBoxSubmit ? 'Frozen Box Delivery' : 'Delivery'),
@@ -1354,6 +1457,8 @@ function submitOrder() {
 
   const img = new Image();
   img.src = APPS_SCRIPT_URL + '?' + params.toString();
+
+  if (promoUsed) incrementPromoUses();
 
   openWhatsApp();
   goToPage(5);
@@ -1388,9 +1493,14 @@ function openWhatsApp() {
 
   const subtotal = getCartTotal();
   const fbCharge = isFrozenBox ? getFrozenBoxCharge() : 0;
+  const discount = getDiscount();
+  const promoUsed = promoApplied && discount > 0;
   const grandTotal = getGrandTotal();
 
   let totalBlock = `Subtotal: RM${subtotal.toFixed(2)}`;
+  if (promoUsed) {
+    totalBlock += `\nPromo Code (${PROMO_CODE}): - RM${discount.toFixed(2)}`;
+  }
   if (isFrozenBox) {
     totalBlock += `\nFrozen Box Delivery Charge: RM${fbCharge.toFixed(2)}`;
   }
@@ -1417,6 +1527,9 @@ function resetOrder() {
     document.getElementById('item-' + i).classList.remove('has-qty');
   }
   addCustomMeal();
+  promoApplied = false;
+  document.getElementById('promo-input').value = '';
+  document.getElementById('promo-message').textContent = '';
   document.getElementById('cust-name').value = '';
   document.getElementById('cust-phone').value = '';
   document.getElementById('cust-address').value = '';
