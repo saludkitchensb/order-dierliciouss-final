@@ -1214,8 +1214,12 @@ function updateFrozenBoxChargeDisplay() {
 function getDiscount() {
   if (!promoApplied) return 0;
   const subtotal = getCartTotal();
-  if (subtotal < PROMO_MIN_SPEND) return 0;
-  return subtotal * 0.10;
+  // Custom Protein packages are excluded from the 10% promo discount entirely.
+  let customTotal = 0;
+  customMeals.forEach(m => customTotal += getCustomMealPrice(m));
+  const discountableAmount = subtotal - customTotal;
+  if (discountableAmount < PROMO_MIN_SPEND) return 0;
+  return discountableAmount * 0.10;
 }
 
 function getGrandTotal() {
@@ -1252,9 +1256,22 @@ function applyPromoCode() {
     updatePromoDisplay();
     return;
   }
-  if (subtotal < PROMO_MIN_SPEND) {
+  let customTotal = 0;
+  customMeals.forEach(m => customTotal += getCustomMealPrice(m));
+  const nonCustomTotal = subtotal - customTotal;
+
+  if (nonCustomTotal <= 0) {
+    // Customer only bought Custom Protein package(s) - promo not applicable at all.
     promoApplied = false;
-    msgEl.textContent = `Pembelian minimum RM${PROMO_MIN_SPEND.toFixed(2)} (produk & pakej, tidak termasuk caj penghantaran) diperlukan untuk kod ini.`;
+    msgEl.textContent = 'Harap maaf, promo 10% tidak termasuk dalam pakej Custom Protein.';
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+
+  if (nonCustomTotal < PROMO_MIN_SPEND) {
+    promoApplied = false;
+    msgEl.textContent = `Pembelian minimum RM${PROMO_MIN_SPEND.toFixed(2)} (produk & pakej, tidak termasuk pakej Custom Protein & caj penghantaran) diperlukan untuk kod ini.`;
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
