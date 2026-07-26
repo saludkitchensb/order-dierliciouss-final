@@ -143,7 +143,7 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 2</div>
       <div class="item-price">RM 100.00</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 11 Julai<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 11 July</span></div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 15 Ogos<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 15 August</span></div>
       <div class="cutoff-label" id="cutoff-label-0" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -156,7 +156,7 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 4</div>
       <div class="item-price">RM 100.00</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 25 Julai<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 25 July</span></div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 29 Ogos<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 29 August</span></div>
       <div class="cutoff-label" id="cutoff-label-23" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -657,16 +657,16 @@
 // new month's cutoff and the item re-enables automatically once the
 // current time is before that new cutoff.
 const CUTOFF_DATES = {
-  0:  '2026-07-07T23:59:59',  // Budget Diet Meal Week 2 (PRODUCTS index 0)
-  23: '2026-07-21T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
+  0:  '2026-08-12T23:59:59',  // Budget Diet Meal Week 2 (PRODUCTS index 0)
+  23: '2026-08-26T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
 };
 
 // Fixed delivery/self-pickup dates for Budget Diet Meal weeks (per catalog).
 // These override the normal 3-5 working day estimate when the order contains
 // one of these items. Edit alongside CUTOFF_DATES each month.
 const FIXED_DELIVERY_DATES = {
-  0:  { bm: '11 Julai 2026', en: '11 July 2026' },  // Budget Diet Meal Week 2
-  23: { bm: '25 Julai 2026', en: '25 July 2026' },  // Budget Diet Meal Week 4
+  0:  { bm: '15 Ogos 2026', en: '15 August 2026' },  // Budget Diet Meal Week 2
+  23: { bm: '29 Ogos 2026', en: '29 August 2026' },  // Budget Diet Meal Week 4
 };
 
 function getFixedDeliveryDateForCart() {
@@ -680,10 +680,19 @@ function getFixedDeliveryDateForCart() {
 function isPastCutoff(productIndex) {
   const cutoff = CUTOFF_DATES[productIndex];
   if (!cutoff) return false;
-  // Compare against current Malaysia time
-  const nowMY = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
-  const cutoffDate = new Date(cutoff);
-  return nowMY > cutoffDate;
+  // Malaysia is UTC+8 year-round (no DST). Treat the cutoff string as MY local
+  // time and compare it against the current absolute instant. This avoids
+  // relying on Intl/timeZone support, which some older/in-app browsers lack
+  // (that unsupported-timezone crash was silently breaking the + button for
+  // these two items only).
+  let cutoffDate;
+  try {
+    cutoffDate = new Date(cutoff + '+08:00');
+  } catch (e) {
+    cutoffDate = new Date(cutoff);
+  }
+  if (isNaN(cutoffDate.getTime())) return false;
+  return Date.now() > cutoffDate.getTime();
 }
 
 function applyCutoffStates() {
