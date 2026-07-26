@@ -680,10 +680,19 @@ function getFixedDeliveryDateForCart() {
 function isPastCutoff(productIndex) {
   const cutoff = CUTOFF_DATES[productIndex];
   if (!cutoff) return false;
-  // Compare against current Malaysia time
-  const nowMY = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
-  const cutoffDate = new Date(cutoff);
-  return nowMY > cutoffDate;
+  // Malaysia is UTC+8 year-round (no DST). Treat the cutoff string as MY local
+  // time and compare it against the current absolute instant. This avoids
+  // relying on Intl/timeZone support, which some older/in-app browsers lack
+  // (that unsupported-timezone crash was silently breaking the + button for
+  // these two items only).
+  let cutoffDate;
+  try {
+    cutoffDate = new Date(cutoff + '+08:00');
+  } catch (e) {
+    cutoffDate = new Date(cutoff);
+  }
+  if (isNaN(cutoffDate.getTime())) return false;
+  return Date.now() > cutoffDate.getTime();
 }
 
 function applyCutoffStates() {
