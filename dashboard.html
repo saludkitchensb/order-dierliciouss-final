@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dietliciouss — Order Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --blue:#1F6FAC; --blue-light:#2B78B0; --blue-pale:#DCEBF5; --cream:#F7F9FB;
+  --ink:#1A1A1A; --ink-soft:#4A4A4A; --ink-mute:#8A8A8A; --border:#DCE2E8; --white:#FFFFFF;
+  --green:#1E8E5A; --green-pale:#E3F5EA; --amber:#B7791F; --amber-pale:#FDF3DD;
+  --red:#C0392B; --red-pale:#FBE7E4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;padding-bottom:40px}
+.topbar{background:var(--blue);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.topbar h1{font-size:18px;font-weight:800;letter-spacing:-.2px}
+.topbar .sub{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:10px;font-size:12px}
+.pill{background:rgba(255,255,255,.15);padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:#8AE28A}
+.dot.off{background:#F0A0A0}
+.iconbtn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.iconbtn:hover{background:rgba(255,255,255,.25)}
+.wrap{max-width:1180px;margin:0 auto;padding:20px}
+.cfgbar{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:none;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.cfgbar.show{display:flex}
+.cfgbar .field{flex:1;min-width:260px}
+.cfgbar label{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px}
+.cfgbar input{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'DM Mono',monospace}
+.btn{padding:9px 16px;border-radius:8px;border:none;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:var(--blue-light)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px}
+.card .lbl{font-size:10.5px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.card .val{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:var(--blue)}
+.card .sub2{font-size:11px;color:var(--ink-mute);margin-top:3px}
+.panel{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px}
+.panel h2{font-size:15px;font-weight:800;margin-bottom:4px}
+.panel .phint{font-size:12px;color:var(--ink-mute);margin-bottom:14px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.controls input[type=text]{flex:1;min-width:180px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.controls select{padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:var(--cream);color:var(--ink-mute);text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;border-bottom:2px solid var(--border);white-space:nowrap}
+tbody td{padding:10px 10px;border-bottom:1px solid #EEF1F4;vertical-align:top}
+tbody tr:hover{background:#FAFCFE}
+.grp-row td{background:var(--blue-pale);color:var(--blue);font-weight:800;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px}
+.mono{font-family:'DM Mono',monospace}
+.items-cell{max-width:260px;font-size:11.5px;color:var(--ink-soft);white-space:pre-line}
+.badge{display:inline-block;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-pending{background:var(--red-pale);color:var(--red)}
+.b-paid{background:var(--green-pale);color:var(--green)}
+.b-preparing{background:var(--amber-pale);color:var(--amber)}
+.b-ready{background:var(--blue-pale);color:var(--blue)}
+.b-delivered{background:#E9E9EE;color:#555}
+.statusSel{margin-top:5px;font-size:11px;padding:4px 6px;border-radius:6px;border:1.5px solid var(--border)}
+.empty{text-align:center;padding:40px 10px;color:var(--ink-mute);font-size:13px}
+.reportgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.reportcard{border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:left;background:var(--cream);cursor:pointer;font-family:inherit}
+.reportcard:hover{border-color:var(--blue-light);background:var(--blue-pale)}
+.reportcard .rt{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.reportcard .rd{font-size:11.5px;color:var(--ink-mute)}
+.modal-bg{position:fixed;inset:0;background:rgba(20,25,30,.55);display:none;align-items:flex-start;justify-content:center;z-index:200;overflow:auto;padding:30px 14px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:720px;width:100%;padding:24px;margin-bottom:30px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.modal-head h3{font-size:16px;font-weight:800;color:var(--blue)}
+.closex{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-mute)}
+.daterow{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.daterow .fld{flex:1;min-width:140px}
+.daterow label{font-size:10.5px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;display:block;margin-bottom:4px}
+.daterow input{width:100%;padding:8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
+.report-body table{margin-top:6px}
+.report-body h4{font-size:12.5px;color:var(--blue);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.4px}
+.totalrow td{background:var(--blue-pale);font-weight:800;color:var(--blue)}
+@media print{
+  .topbar,.cfgbar,.controls,.panel:not(.printing),.cards{display:none!important}
+  .modal-bg{position:static;background:none;padding:0}
+  .modal{box-shadow:none;max-width:100%}
+  body{padding:0}
+}
+.login-screen{position:fixed;inset:0;background:var(--blue);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+.login-card{background:#fff;border-radius:16px;padding:32px 28px;width:100%;max-width:340px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.login-card h2{font-size:18px;font-weight:800;color:var(--blue);margin-bottom:4px}
+.login-card .lsub{font-size:12px;color:var(--ink-mute);margin-bottom:20px}
+.login-card label{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px}
+.login-card input{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;margin-bottom:12px;font-family:inherit}
+.login-card .btn{width:100%;padding:11px;font-size:13.5px}
+.login-err{background:var(--red-pale);color:var(--red);font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;margin-bottom:12px;display:none}
+.login-err.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h2>🥗 Dietliciouss Dashboard</h2>
+    <div class="lsub">Enter the dashboard password to continue.</div>
+    <div class="login-err" id="loginErr">Wrong password. Please try again.</div>
+    <label>Password</label>
+    <input type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-blue" onclick="doLogin()" id="loginBtn">Log In</button>
+  </div>
+</div>
+
+<div id="dashboardRoot" style="display:none">
+
+<div class="topbar">
+  <div>
+    <h1>🥗 Dietliciouss — Order Dashboard</h1>
+    <div class="sub">Live view of your Google Sheet orders</div>
+  </div>
+  <div class="topbar-right">
+    <span class="pill"><span class="dot off" id="connDot"></span><span id="connText">Not connected</span></span>
+    <button class="iconbtn" onclick="toggleCfg()">⚙️ Settings</button>
+    <button class="iconbtn" onclick="loadOrders()">↻ Refresh</button>
+    <button class="iconbtn" onclick="doLogout()">🔒 Log Out</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="cfgbar" id="cfgbar">
+    <div class="field">
+      <label>Apps Script Web App URL</label>
+      <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <button class="btn btn-blue" onclick="saveAndLoad()">Connect</button>
+  </div>
+
+  <div class="cards" id="summaryCards"></div>
+
+  <div class="panel">
+    <h2>📈 Sales Summary</h2>
+    <div class="phint">Counts orders marked PAID, PREPARING, READY or DELIVERED as sales (excludes PENDING).</div>
+    <div class="controls">
+      <select id="summaryMode" onchange="renderSummaryTable()">
+        <option value="week">Weekly (last 8 weeks)</option>
+        <option value="month">Monthly (last 6 months)</option>
+      </select>
+    </div>
+    <div id="summaryTableWrap"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📋 Orders</h2>
+    <div class="controls">
+      <input type="text" id="searchBox" placeholder="Search name, phone, or invoice..." oninput="renderOrders()">
+      <select id="statusFilter" onchange="renderOrders()">
+        <option value="">All statuses</option>
+        <option value="PENDING">Pending</option>
+        <option value="PAID">Paid</option>
+        <option value="PREPARING">Preparing</option>
+        <option value="READY">Ready</option>
+        <option value="DELIVERED">Delivered</option>
+      </select>
+      <select id="sortMode" onchange="renderOrders()">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first (by date)</option>
+        <option value="month">Group by month</option>
+        <option value="name">By name (A–Z)</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody id="ordersBody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="ordersEmpty" style="display:none">No orders match your filters.</div>
+  </div>
+
+  <div class="panel">
+    <h2>🧾 Reports</h2>
+    <div class="phint">Generate a printable report — pick a date range, then Print / Save as PDF.</div>
+    <div class="reportgrid">
+      <button class="reportcard" onclick="openReport('sales')">
+        <div class="rt">💰 Sales Report</div>
+        <div class="rd">Revenue & order count by period</div>
+      </button>
+      <button class="reportcard" onclick="openReport('orders')">
+        <div class="rt">📦 Order Report</div>
+        <div class="rd">Full order list for a date range</div>
+      </button>
+      <button class="reportcard" onclick="openReport('production')">
+        <div class="rt">🥩 Production Report</div>
+        <div class="rd">Raw ingredients needed (PREPARING orders)</div>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal printing" id="modalContent"></div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYU-8qM8wIsjCjKtG92e7_55rI_1kUXwHbH2b7fUU53-KGM2kaKkNVT03EEe3wVIvc/exec';
+let orders = [];
+let connected = false;
+let AUTH_PWD = null;
+
+async function doLogin(){
+  const pwd = document.getElementById('loginPwd').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+  err.classList.remove('show');
+  if(!pwd){ err.textContent='Please enter a password.'; err.classList.add('show'); return; }
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=login&pwd=' + encodeURIComponent(pwd));
+    const data = await res.json();
+    if(data.ok){
+      AUTH_PWD = pwd;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboardRoot').style.display = 'block';
+      loadOrders();
+    } else {
+      err.textContent = 'Wrong password. Please try again.';
+      err.classList.add('show');
+    }
+  }catch(e){
+    err.textContent = 'Could not reach the dashboard. Check the Web App URL in Settings.';
+    err.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'Log In';
+}
+function doLogout(){
+  AUTH_PWD = null;
+  orders = [];
+  document.getElementById('dashboardRoot').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPwd').value = '';
+  document.getElementById('loginPwd').focus();
+}
+
+const STATUS_KEYS = ['PENDING','PAID','PREPARING','READY','DELIVERED'];
+function statusKey(s){ s=(s||'').toUpperCase(); for(const k of STATUS_KEYS){ if(s.indexOf(k)===0) return k; } return 'PENDING'; }
+function statusBadgeClass(s){ return 'b-'+statusKey(s).toLowerCase(); }
+function statusLabel(s){
+  const map={PENDING:'Pending',PAID:'Paid ✅',PREPARING:'Preparing 👨‍🍳',READY:'Ready 🛍️',DELIVERED:'Delivered 📦'};
+  return map[statusKey(s)] || s;
+}
+function isSale(s){ const k=statusKey(s); return k==='PAID'||k==='PREPARING'||k==='READY'||k==='DELIVERED'; }
+
+function parseDMY(str){
+  if(!str) return null;
+  const parts=String(str).trim().split('/');
+  if(parts.length===3){
+    return new Date(parseInt(parts[2],10), parseInt(parts[1],10)-1, parseInt(parts[0],10));
+  }
+  return null;
+}
+function fmtRM(n){ return 'RM ' + (Number(n)||0).toFixed(2); }
+const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDateShort(d){ return String(d.getDate()).padStart(2,'0')+' '+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear(); }
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabel(d){ return MONTH_NAMES[d.getMonth()]+' '+d.getFullYear(); }
+function startOfWeek(d){
+  const day=d.getDay(); const diff=(day===0?-6:1)-day; // Monday as start
+  const r=new Date(d); r.setDate(d.getDate()+diff); r.setHours(0,0,0,0); return r;
+}
+function weekKey(d){ const s=startOfWeek(d); return s.getFullYear()+'-'+s.getMonth()+'-'+s.getDate(); }
+function weekLabel(d){ const s=startOfWeek(d); const e=new Date(s); e.setDate(s.getDate()+6); return fmtDateShort(s)+' – '+fmtDateShort(e); }
+
+// ============================================================
+// CONNECTION / LOAD
+// ============================================================
+function toggleCfg(){
+  const el=document.getElementById('cfgbar');
+  el.classList.toggle('show');
+  document.getElementById('scriptUrl').value=SCRIPT_URL;
+}
+function saveAndLoad(){
+  const v=document.getElementById('scriptUrl').value.trim();
+  if(v) SCRIPT_URL=v;
+  document.getElementById('cfgbar').classList.remove('show');
+  loadOrders();
+}
+function setConn(ok){
+  connected=ok;
+  document.getElementById('connDot').className='dot'+(ok?'':' off');
+  document.getElementById('connText').textContent = ok ? 'Connected' : 'Not connected';
+}
+
+async function loadOrders(){
+  document.getElementById('connText').textContent='Loading…';
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=getOrders&pwd=' + encodeURIComponent(AUTH_PWD||''));
+    const data = await res.json();
+    if(!data.ok){
+      if(data.error === 'Unauthorized'){ doLogout(); return; }
+      throw new Error(data.error || 'Unknown error');
+    }
+    orders = data.orders || [];
+    setConn(true);
+    renderAll();
+  }catch(err){
+    setConn(false);
+    document.getElementById('connText').textContent='Connection failed';
+    console.error(err);
+    if(orders.length===0){
+      document.getElementById('ordersEmpty').style.display='block';
+      document.getElementById('ordersEmpty').textContent = 'Could not connect. Open Settings ⚙️ to check the Web App URL, or make sure the "getOrders" action was added to your Apps Script and redeployed.';
+    }
+  }
+}
+
+async function updateStatus(inv, newStatus){
+  try{
+    await fetch(SCRIPT_URL + '?action=updateStatus&inv=' + encodeURIComponent(inv) + '&status=' + encodeURIComponent(newStatus) + '&pwd=' + encodeURIComponent(AUTH_PWD||''));
+    const o = orders.find(x=>x.inv===inv);
+    if(o) o.status = statusLabel(newStatus);
+    renderAll();
+  }catch(err){
+    alert('Failed to update status. Please check your connection and try again.');
+  }
+}
+
+function renderAll(){
+  renderSummaryCards();
+  renderSummaryTable();
+  renderOrders();
+}
+
+// ============================================================
+// SUMMARY CARDS (this week / this month)
+// ============================================================
+function renderSummaryCards(){
+  const now=new Date();
+  const wk=weekKey(now), mk=monthKey(now);
+  let wkRev=0, wkCnt=0, mRev=0, mCnt=0, pending=0;
+
+  orders.forEach(o=>{
+    const d=parseDMY(o.date);
+    if(statusKey(o.status)==='PENDING') pending++;
+    if(!d || !isSale(o.status)) return;
+    if(weekKey(d)===wk){ wkRev+=o.total; wkCnt++; }
+    if(monthKey(d)===mk){ mRev+=o.total; mCnt++; }
+  });
+
+  const cards=[
+    {lbl:'This Week Revenue', val:fmtRM(wkRev), sub:wkCnt+' orders'},
+    {lbl:'This Month Revenue', val:fmtRM(mRev), sub:mCnt+' orders'},
+    {lbl:'Avg Order (Month)', val: mCnt ? fmtRM(mRev/mCnt) : 'RM 0.00', sub:'per order'},
+    {lbl:'Pending Orders', val:String(pending), sub:'awaiting payment'},
+  ];
+  document.getElementById('summaryCards').innerHTML = cards.map(c=>
+    `<div class="card"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub2">${c.sub}</div></div>`
+  ).join('');
+}
+
+function renderSummaryTable(){
+  const mode = document.getElementById('summaryMode').value;
+  const buckets = {};
+  orders.forEach(o=>{
+    const d=parseDMY(o.date);
+    if(!d || !isSale(o.status)) return;
+    const key = mode==='week' ? weekKey(d) : monthKey(d);
+    if(!buckets[key]) buckets[key] = { label: mode==='week'?weekLabel(d):monthLabel(d), rev:0, cnt:0, sortDate:d };
+    buckets[key].rev += o.total; buckets[key].cnt++;
+  });
+  let rows = Object.values(buckets).sort((a,b)=>b.sortDate-a.sortDate);
+  rows = rows.slice(0, mode==='week' ? 8 : 6);
+
+  if(rows.length===0){
+    document.getElementById('summaryTableWrap').innerHTML = '<div class="empty">No sales yet in this range.</div>';
+    return;
+  }
+  const totalRev = rows.reduce((s,r)=>s+r.rev,0);
+  const totalCnt = rows.reduce((s,r)=>s+r.cnt,0);
+  let html = '<table><thead><tr><th>' + (mode==='week'?'Week':'Month') + '</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr><td>${r.label}</td><td class="mono" style="text-align:right">${r.cnt}</td><td class="mono" style="text-align:right">${fmtRM(r.rev)}</td></tr>`;
+  });
+  html += `<tr class="totalrow"><td>Total</td><td class="mono" style="text-align:right">${totalCnt}</td><td class="mono" style="text-align:right">${fmtRM(totalRev)}</td></tr>`;
+  html += '</tbody></table>';
+  document.getElementById('summaryTableWrap').innerHTML = html;
+}
+
+// ============================================================
+// ORDERS TABLE
+// ============================================================
+function filteredOrders(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const sf = document.getElementById('statusFilter').value;
+  return orders.filter(o=>{
+    if(sf && statusKey(o.status)!==sf) return false;
+    if(q){
+      const hay = (o.name+' '+o.phone+' '+o.inv).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  });
+}
+
+function orderRowHtml(o){
+  const d = parseDMY(o.date);
+  const key = statusKey(o.status);
+  return `<tr>
+    <td class="mono">${o.inv}</td>
+    <td class="mono">${o.date}</td>
+    <td><b>${o.name}</b></td>
+    <td class="mono">${o.phone}</td>
+    <td class="items-cell">${o.items}</td>
+    <td class="mono">${fmtRM(o.total)}</td>
+    <td>
+      <span class="badge ${statusBadgeClass(o.status)}">${statusLabel(o.status)}</span><br>
+      <select class="statusSel" onchange="updateStatus('${o.inv.replace(/'/g,"\\'")}', this.value)">
+        <option value="">Change status…</option>
+        <option value="PAID" ${key==='PAID'?'disabled':''}>Mark Paid</option>
+        <option value="PREPARING" ${key==='PREPARING'?'disabled':''}>Mark Preparing</option>
+        <option value="READY" ${key==='READY'?'disabled':''}>Mark Ready</option>
+        <option value="DELIVERED" ${key==='DELIVERED'?'disabled':''}>Mark Delivered</option>
+      </select>
+    </td>
+  </tr>`;
+}
+
+function renderOrders(){
+  const list = filteredOrders();
+  const mode = document.getElementById('sortMode').value;
+  const tbody = document.getElementById('ordersBody');
+  const empty = document.getElementById('ordersEmpty');
+
+  if(list.length===0){
+    tbody.innerHTML=''; empty.style.display='block'; empty.textContent='No orders match your filters.';
+    return;
+  }
+  empty.style.display='none';
+
+  let html='';
+  if(mode==='month'){
+    const groups={};
+    list.forEach(o=>{
+      const d=parseDMY(o.date);
+      const key = d ? monthKey(d) : 'unknown';
+      const label = d ? monthLabel(d) : 'Unknown date';
+      if(!groups[key]) groups[key]={label, items:[], sortDate:d||new Date(0)};
+      groups[key].items.push(o);
+    });
+    const sortedKeys = Object.keys(groups).sort((a,b)=>groups[b].sortDate-groups[a].sortDate);
+    sortedKeys.forEach(k=>{
+      html += `<tr class="grp-row"><td colspan="7">${groups[k].label} (${groups[k].items.length} orders)</td></tr>`;
+      groups[k].items
+        .sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0))
+        .forEach(o=>{ html+=orderRowHtml(o); });
+    });
+  } else {
+    let sorted = [...list];
+    if(mode==='newest') sorted.sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0) || b.rowIndex-a.rowIndex);
+    else if(mode==='oldest') sorted.sort((a,b)=>(parseDMY(a.date)||0)-(parseDMY(b.date)||0));
+    else if(mode==='name') sorted.sort((a,b)=>a.name.localeCompare(b.name));
+    sorted.forEach(o=>{ html+=orderRowHtml(o); });
+  }
+  tbody.innerHTML = html;
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function firstOfMonthStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01'; }
+
+function openReport(type){
+  const html = `
+    <div class="modal-head"><h3>Generate ${type==='sales'?'Sales':type==='orders'?'Order':'Production'} Report</h3><button class="closex" onclick="closeModal()">✕</button></div>
+    <div class="daterow">
+      <div class="fld"><label>From</label><input type="date" id="repFrom" value="${firstOfMonthStr()}"></div>
+      <div class="fld"><label>To</label><input type="date" id="repTo" value="${todayStr()}"></div>
+      <div class="fld" style="flex:0 0 auto;align-self:flex-end"><button class="btn btn-blue" onclick="runReport('${type}')">Generate</button></div>
+    </div>
+    <div id="reportOutput"></div>
+  `;
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+
+function ordersInRange(fromStr, toStr){
+  const fromD = fromStr ? new Date(fromStr+'T00:00:00') : null;
+  const toD = toStr ? new Date(toStr+'T23:59:59') : null;
+  return orders.filter(o=>{
+    const d = parseDMY(o.date);
+    if(fromD && d && d<fromD) return false;
+    if(toD && d && d>toD) return false;
+    return true;
+  });
+}
+
+async function runReport(type){
+  const from = document.getElementById('repFrom').value;
+  const to = document.getElementById('repTo').value;
+  const out = document.getElementById('reportOutput');
+  out.innerHTML = '<div class="empty">Generating…</div>';
+
+  if(type==='sales'){
+    const list = ordersInRange(from,to).filter(o=>isSale(o.status));
+    const rev = list.reduce((s,o)=>s+o.total,0);
+    const byMonth={};
+    list.forEach(o=>{ const d=parseDMY(o.date); if(!d) return; const k=monthKey(d); if(!byMonth[k]) byMonth[k]={label:monthLabel(d),rev:0,cnt:0}; byMonth[k].rev+=o.total; byMonth[k].cnt++; });
+    let rows = Object.values(byMonth).map(r=>`<tr><td>${r.label}</td><td class="mono" style="text-align:right">${r.cnt}</td><td class="mono" style="text-align:right">${fmtRM(r.rev)}</td></tr>`).join('');
+    out.innerHTML = `
+      <div class="report-body">
+        <div class="phint">Period: ${from} to ${to} · Generated ${new Date().toLocaleString()}</div>
+        <h4>By Month</h4>
+        <table><thead><tr><th>Month</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th></tr></thead>
+        <tbody>${rows}<tr class="totalrow"><td>Total</td><td class="mono" style="text-align:right">${list.length}</td><td class="mono" style="text-align:right">${fmtRM(rev)}</td></tr></tbody></table>
+        <button class="btn btn-blue" style="margin-top:12px;width:100%" onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>`;
+  }
+
+  else if(type==='orders'){
+    const list = ordersInRange(from,to).sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0));
+    let rows = list.map(o=>`<tr><td class="mono">${o.inv}</td><td class="mono">${o.date}</td><td>${o.name}</td><td class="mono">${fmtRM(o.total)}</td><td>${statusLabel(o.status)}</td></tr>`).join('');
+    const total = list.reduce((s,o)=>s+o.total,0);
+    out.innerHTML = `
+      <div class="report-body">
+        <div class="phint">Period: ${from} to ${to} · ${list.length} orders · Generated ${new Date().toLocaleString()}</div>
+        <table><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th style="text-align:right">Total</th><th>Status</th></tr></thead>
+        <tbody>${rows}<tr class="totalrow"><td colspan="3">Total</td><td class="mono" style="text-align:right">${fmtRM(total)}</td><td></td></tr></tbody></table>
+        <button class="btn btn-blue" style="margin-top:12px;width:100%" onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>`;
+  }
+
+  else if(type==='production'){
+    try{
+      const res = await fetch(SCRIPT_URL + '?action=getProduction&from=' + from + '&to=' + to + '&pwd=' + encodeURIComponent(AUTH_PWD||''));
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error||'error');
+      const groups={};
+      (data.ingredients||[]).forEach(ing=>{ if(!groups[ing.group]) groups[ing.group]=[]; groups[ing.group].push(ing); });
+      let ingRows='';
+      Object.keys(groups).forEach(g=>{
+        ingRows += `<tr class="grp-row"><td colspan="2">${g}</td></tr>`;
+        groups[g].forEach(ing=>{ ingRows += `<tr><td>${ing.label}</td><td class="mono" style="text-align:right">${ing.qty} ${ing.unit}</td></tr>`; });
+      });
+      let pkgRows = Object.keys(data.packages||{}).sort().map(p=>`<tr><td>${p}</td><td class="mono" style="text-align:right">${data.packages[p]} order</td></tr>`).join('');
+      out.innerHTML = `
+        <div class="report-body">
+          <div class="phint">Period: ${from} to ${to} · ${data.orderCount||0} orders (PREPARING) · Generated ${new Date().toLocaleString()}</div>
+          <h4>Packages</h4>
+          <table><thead><tr><th>Package</th><th style="text-align:right">Qty</th></tr></thead><tbody>${pkgRows||'<tr><td colspan="2">None</td></tr>'}</tbody></table>
+          <h4>Raw Ingredients</h4>
+          <table><thead><tr><th>Ingredient</th><th style="text-align:right">Qty</th></tr></thead><tbody>${ingRows||'<tr><td colspan="2">None</td></tr>'}</tbody></table>
+          <button class="btn btn-blue" style="margin-top:12px;width:100%" onclick="window.print()">🖨️ Print / Save PDF</button>
+        </div>`;
+    }catch(err){
+      out.innerHTML = '<div class="empty">Could not load production data. Make sure the "getProduction" action was added to your Apps Script and redeployed.</div>';
+    }
+  }
+}
+
+// ============================================================
+// INIT — dashboard stays hidden behind the login screen until doLogin() succeeds
+// ============================================================
+</script>
+</body>
+</html>
