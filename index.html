@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  style-src 'self' 'unsafe-inline' fonts.googleapis.com;
+  font-src fonts.gstatic.com;
+  img-src 'self' data: script.google.com;
+  connect-src 'self' script.google.com;
+  script-src 'self' 'unsafe-inline';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'none';
+">
 <title>Dietliciouss — Order</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -459,11 +470,11 @@
     <div class="info-card-title">Maklumat Peribadi <span class="en" style="font-weight:400;">/ Personal Details</span></div>
     <div class="field-group">
       <div class="field-label">Nama Penuh *</div>
-      <input type="text" id="cust-name" placeholder="cth: Ahmad bin Ali">
+      <input type="text" id="cust-name" placeholder="cth: Ahmad bin Ali" maxlength="100" required pattern="[A-Za-z\s.'@\-]{2,100}" autocomplete="name">
     </div>
     <div class="field-group">
       <div class="field-label">No. Telefon (WhatsApp) *</div>
-      <input type="tel" id="cust-phone" placeholder="cth: 0123456789">
+      <input type="tel" id="cust-phone" placeholder="cth: 0123456789" maxlength="15" required pattern="^01[0-9]{8,9}$" inputmode="numeric" autocomplete="tel">
     </div>
     <div class="field-group">
       <div class="field-label">Kaedah Penghantaran * <span class="en" style="font-weight:400;">/ Delivery Method</span></div>
@@ -481,7 +492,7 @@
     </div>
     <div class="field-group" id="address-group">
       <div class="field-label">Alamat Penghantaran *</div>
-      <textarea id="cust-address" placeholder="No, Jalan, Taman, Poskod, Negeri"></textarea>
+      <textarea id="cust-address" placeholder="No, Jalan, Taman, Poskod, Negeri" maxlength="300" autocomplete="street-address"></textarea>
     </div>
     <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
     <div id="pickup-estimate" class="delivery-badge" style="display:none;">Anggaran tarikh sedia diambil: sedang dikira...</div>
@@ -1386,9 +1397,13 @@ function validateInfo() {
   const name = document.getElementById('cust-name').value.trim();
   const phone = document.getElementById('cust-phone').value.trim();
   const address = document.getElementById('cust-address').value.trim();
-  if (!name) { showToast('Sila masukkan nama penuh anda.'); return false; }
-  if (!phone || phone.length < 9) { showToast('Nombor telefon tidak sah.'); return false; }
-  if (receiveMethod === 'delivery' && !address) { showToast('Sila masukkan alamat penghantaran.'); return false; }
+  const namePattern = /^[A-Za-z\s.'@\-]{2,100}$/;
+  const phonePattern = /^01[0-9]{8,9}$/;
+
+  if (!name || !namePattern.test(name)) { showToast('Nama tidak sah. Sila gunakan huruf sahaja (2-100 aksara).'); return false; }
+  if (!phone || !phonePattern.test(phone)) { showToast('Nombor telefon tidak sah. Format: 01XXXXXXXX.'); return false; }
+  if (address.length > 300) { showToast('Alamat terlalu panjang (maksimum 300 aksara).'); return false; }
+  if ((receiveMethod === 'delivery' || receiveMethod === 'frozenbox') && !address) { showToast('Sila masukkan alamat penghantaran.'); return false; }
   return true;
 }
 
