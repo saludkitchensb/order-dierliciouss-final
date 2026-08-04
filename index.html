@@ -8,13 +8,15 @@
   style-src 'self' 'unsafe-inline' fonts.googleapis.com;
   font-src fonts.gstatic.com;
   img-src 'self' data: script.google.com;
-  connect-src 'self' script.google.com;
-  script-src 'self' 'unsafe-inline';
+  connect-src 'self' script.google.com https://challenges.cloudflare.com;
+  script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
+  frame-src https://challenges.cloudflare.com;
   base-uri 'self';
   form-action 'self';
   frame-ancestors 'none';
 ">
 <title>Dietliciouss — Order</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
   :root {
@@ -589,6 +591,10 @@
     </div>
   </div>
 
+  <div style="margin-top:12px;display:flex;justify-content:center;">
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAAEF7Lce86iBTpIhl" data-callback="onTurnstileSuccess" data-error-callback="onTurnstileError"></div>
+  </div>
+
   <div class="summary-card" style="margin-top:8px;text-align:left;">
     <div class="summary-row" style="align-items:flex-start;">
       <span style="font-size:22px;margin-right:4px;">1️⃣</span>
@@ -784,6 +790,14 @@ let currentPage = 1;
 let paymentMethod = 'qr';
 let receiveMethod = 'delivery';
 let customMealCounter = 0;
+let turnstileToken = null;
+
+function onTurnstileSuccess(token) {
+  turnstileToken = token;
+}
+function onTurnstileError() {
+  turnstileToken = null;
+}
 
 // ============================================================
 // PROMO CODE (10% discount, min RM110 spend on products/packages
@@ -1374,6 +1388,7 @@ function goNext() {
     if (!validateInfo()) return;
     goToPage(4);
   } else if (currentPage === 4) {
+    if (!turnstileToken) { showToast('Sila tunggu pengesahan keselamatan selesai (beberapa saat), kemudian cuba lagi.'); return; }
     submitOrder();
   }
 }
@@ -1494,7 +1509,8 @@ function submitOrder() {
     deliveryMethod: isPickup ? 'Self Pickup' : (isFrozenBoxSubmit ? 'Frozen Box Delivery' : 'Delivery'),
     deliveryDate: getDeliveryDateValue(),
     timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' }),
-    token: '95255189-ee1c-4594-a99a-830416c538f6'
+    token: '95255189-ee1c-4594-a99a-830416c538f6',
+    cfToken: turnstileToken || ''
   });
 
   const img = new Image();
