@@ -1493,7 +1493,8 @@ function submitOrder() {
     payment: paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)',
     deliveryMethod: isPickup ? 'Self Pickup' : (isFrozenBoxSubmit ? 'Frozen Box Delivery' : 'Delivery'),
     deliveryDate: getDeliveryDateValue(),
-    timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })
+    timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' }),
+    token: '95255189-ee1c-4594-a99a-830416c538f6'
   });
 
   const img = new Image();
