@@ -9,7 +9,7 @@
   font-src fonts.gstatic.com;
   img-src 'self' data: script.google.com;
   connect-src 'self' script.google.com https://challenges.cloudflare.com;
-  script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
+  script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://script.google.com https://script.googleusercontent.com;
   frame-src https://challenges.cloudflare.com;
   base-uri 'self';
   form-action 'self';
@@ -1496,6 +1496,11 @@ function submitOrder() {
   const promoUsed = promoApplied && discount > 0;
 
   const isPickup = receiveMethod === 'pickup';
+
+  // Unique callback name per attempt so a slow/retried request can't
+  // collide with a newer one.
+  const callbackName = 'orderCb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+
   const params = new URLSearchParams({
     name, phone,
     address: isPickup ? 'SELF PICKUP @ Cybersouth' : address,
@@ -1510,16 +1515,58 @@ function submitOrder() {
     deliveryDate: getDeliveryDateValue(),
     timestamp: new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' }),
     token: '95255189-ee1c-4594-a99a-830416c538f6',
-    cfToken: turnstileToken || ''
+    cfToken: turnstileToken || '',
+    callback: callbackName
   });
 
-  const img = new Image();
-  img.src = APPS_SCRIPT_URL + '?' + params.toString();
+  const btnNext = document.getElementById('btn-next');
+  const originalBtnHtml = btnNext.innerHTML;
+  btnNext.disabled = true;
+  btnNext.innerHTML = 'Menghantar...<span class="en btn-en">Sending...</span>';
 
-  if (promoUsed) incrementPromoUses();
+  let settled = false;
 
-  openWhatsApp();
-  goToPage(5);
+  function cleanup() {
+    const s = document.getElementById(callbackName + '-script');
+    if (s) s.remove();
+    delete window[callbackName];
+  }
+
+  function onSuccess() {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    if (promoUsed) incrementPromoUses();
+    openWhatsApp();
+    goToPage(5);
+  }
+
+  function onFailure(msg) {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    btnNext.disabled = false;
+    btnNext.innerHTML = originalBtnHtml;
+    // Turnstile tokens are single-use — get a fresh one before retrying.
+    turnstileToken = null;
+    if (window.turnstile) { try { turnstile.reset(); } catch (e) {} }
+    showToast('Pesanan gagal dihantar (' + (msg || 'ralat tidak diketahui') + '). Sila cuba lagi.');
+  }
+
+  window[callbackName] = function (result) {
+    if (result && result.ok) onSuccess();
+    else onFailure(result && result.message);
+  };
+
+  const timeoutId = setTimeout(function () { onFailure('masa tamat / tiada sambungan'); }, 12000);
+  const wrappedSuccess = window[callbackName];
+  window[callbackName] = function (result) { clearTimeout(timeoutId); wrappedSuccess(result); };
+
+  const script = document.createElement('script');
+  script.id = callbackName + '-script';
+  script.src = APPS_SCRIPT_URL + '?' + params.toString();
+  script.onerror = function () { clearTimeout(timeoutId); onFailure('rangkaian bermasalah'); };
+  document.body.appendChild(script);
 }
 
 function openWhatsApp() {
