@@ -1376,25 +1376,34 @@ function getFrozenBoxCharge() {
       IDX_BENTO_14 = 31, IDX_BENTO_21 = 32, IDX_BENTO_28 = 33;
 
   const qty = i => quantities[i] || 0;
-// RM150 - Maximum frozen bundle
-if (qty(IDX_COMBO_30) > 0 ||
-    (qty(IDX_VACUUM_30) > 0 && qty(IDX_30DAY_BREAKFAST) > 0)) {
+// ============================================================
+// LARGE / MONTHLY PACKAGE COUNTING
+// ============================================================
+
+// Count all large monthly packages in the same order
+const largePackageCount =
+  qty(IDX_BENTO_21) +
+  qty(IDX_BENTO_28) +
+  qty(IDX_VACUUM_20) +
+  qty(IDX_VACUUM_30) +
+  qty(IDX_COMBO_20) +
+  qty(IDX_COMBO_30) +
+  qty(IDX_30DAY_BREAKFAST);
+
+// 3 or more large packages = RM150
+if (largePackageCount >= 3) {
   return 150;
 }
 
-// RM130 - Extra large frozen bundle
-if (qty(IDX_BENTO_28) > 0 || qty(IDX_VACUUM_30) > 0) {
+// 2 large packages = RM130
+if (largePackageCount === 2) {
   return 130;
 }
 
-// RM110 - Large frozen bundle
-if (qty(IDX_BENTO_21) > 0 ||
-    qty(IDX_VACUUM_20) > 0 ||
-    qty(IDX_COMBO_20) > 0 ||
-    qty(IDX_30DAY_BREAKFAST) > 0) {
+// 1 large package = RM110
+if (largePackageCount === 1) {
   return 110;
 }
-
 // RM90 - Medium large frozen bundle
 if (qty(IDX_BENTO_14) > 0 ||
     qty(IDX_BREAKFAST_21) > 0 ||
