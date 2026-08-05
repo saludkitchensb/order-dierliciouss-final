@@ -1545,7 +1545,7 @@ function submitOrder() {
     else onFailure(result && result.message);
   };
 
-  const timeoutId = setTimeout(function () { onFailure('masa tamat / tiada sambungan'); }, 12000);
+  const timeoutId = setTimeout(function () { onFailure('masa tamat / tiada sambungan'); }, 20000);
   const wrappedSuccess = window[callbackName];
   window[callbackName] = function (result) { clearTimeout(timeoutId); wrappedSuccess(result); };
 
