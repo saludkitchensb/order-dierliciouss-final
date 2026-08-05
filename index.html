@@ -682,7 +682,7 @@
     </div>
     <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
     <div id="pickup-estimate" class="delivery-badge" style="display:none;">Anggaran tarikh sedia diambil: sedang dikira...</div>
-    <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM75</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.<span class="en">Frozen Box Delivery charges range from RM45 to RM75, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.</span></div>
+    <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.<span class="en">Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.</span></div>
   </div>
 
   <div class="info-card" id="delivery-info-card">
@@ -1306,7 +1306,7 @@ function getDeliveryStatus() {
   if (isFrozenBoxMethod) {
     return { free: false, paragraphs: [
       { bm: `<strong>Anggaran tiba (Frozen Box Delivery):</strong> ${getDeliveryDateValue()}`, en: `Estimated Arrival (Frozen Box Delivery): ${getDeliveryDateValue()}` },
-      { bm: 'Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM75 &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.', en: 'Frozen Box Delivery charges range from RM45 to RM75, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.' }
+      { bm: 'Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150 &amp; bergantung kepada size Frozen Box yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.', en: 'Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the styrofoam box used. Delivery is within 24 hours after handover to the courier.' }
     ] };
   }
 
@@ -1356,36 +1356,53 @@ function updateDeliveryStatus() {
 // ============================================================
 // FROZEN BOX DELIVERY CHARGE
 // ============================================================
-// Tiers (highest applicable tier wins, no stacking, except 2MAD/box and RM75 combine):
-//   RM45 - up to 4x protein-type packs, 2x custom packs, 1x each of
-//          7 Days Breakfast / Sourdough Muffin / Wholemeal Wrap / Mix Carbs / Breakfast Value Meal
-//   RM55 - 1x Bento, 1x Budget Diet Meal (any week) ONLY, OR RM45-tier qty exceeded ONLY (not combined)
-//   RM65 - 1x 2MAD OR 1x 30 Days Breakfast Package (each additional set adds another RM65 box)
-//   RM90 - 1x 2MAD TOGETHER WITH 1x 30 Days Breakfast Package (combo flat rate, extra sets +RM65 each)
-//   RM75 - Bento/Budget Diet Meal present TOGETHER WITH protein/custom pack qty exceeding RM45 limits
+// Tiers (highest applicable tier wins):
+//   RM45  - Small frozen items / breakfast add-ons
+//   RM60  - Protein packs / Budget Diet Meal
+//   RM75  - Bento meals
+//   RM90  - 30 Days Breakfast Package
+//   RM110 - Large frozen bundle
+//   RM130 - Extra large frozen bundle
+//   RM150 - Maximum frozen bundle
 function getFrozenBoxCharge() {
   // Indices in PRODUCTS array
-  const IDX_BUDGET_WEEK2 = 0, IDX_VALUE_BREAKFAST = 1, IDX_BENTO = 2, IDX_2MAD = 3,
-        IDX_7DAY_BREAKFAST = 4, IDX_SOURDOUGH_CHICKEN = 8, IDX_SOURDOUGH_BEEF = 9, IDX_SOURDOUGH_SET = 10,
-        IDX_WRAP_CHICKEN = 11, IDX_WRAP_BEEF = 12, IDX_WRAP_SET = 13, IDX_PATTY = 14,
-        IDX_MIX_CHICKEN = 15, IDX_MIX_DORY = 16, IDX_MIX_SALMON = 17, IDX_MIX_PROTEIN = 18,
-        IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24;
+  const IDX_BUDGET_WEEK2 = 0, IDX_VALUE_BREAKFAST = 1, IDX_BENTO = 2,
+      IDX_7DAY_BREAKFAST = 4, IDX_SOURDOUGH_CHICKEN = 8, IDX_SOURDOUGH_BEEF = 9, IDX_SOURDOUGH_SET = 10,
+      IDX_WRAP_CHICKEN = 11, IDX_WRAP_BEEF = 12, IDX_WRAP_SET = 13, IDX_PATTY = 14,
+      IDX_MIX_CHICKEN = 15, IDX_MIX_DORY = 16, IDX_MIX_SALMON = 17, IDX_MIX_PROTEIN = 18,
+      IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
+      IDX_VACUUM_10 = 25, IDX_VACUUM_20 = 26, IDX_VACUUM_30 = 27,
+      IDX_COMBO_10 = 28, IDX_COMBO_20 = 29, IDX_COMBO_30 = 30,
+      IDX_BENTO_14 = 31, IDX_BENTO_21 = 32, IDX_BENTO_28 = 33;
 
   const qty = i => quantities[i] || 0;
+// RM150 - Maximum frozen bundle
+if (qty(IDX_COMBO_30) > 0 ||
+    (qty(IDX_VACUUM_30) > 0 && qty(IDX_30DAY_BREAKFAST) > 0)) {
+  return 150;
+}
 
-  // 2MAD or 30 Days Breakfast Package: 1 dedicated box (RM65) per set (large multi-item packages)
-  // Combo discount: 1x 2MAD + 1x 30 Days Breakfast together = RM90 flat (instead of RM65+RM65)
-  const count2mad = qty(IDX_2MAD);
-  const count30dayBreakfast = qty(IDX_30DAY_BREAKFAST);
-  if (count2mad > 0 || count30dayBreakfast > 0) {
-    if (count2mad > 0 && count30dayBreakfast > 0) {
-      const extra2mad = Math.max(count2mad - 1, 0);
-      const extra30day = Math.max(count30dayBreakfast - 1, 0);
-      return 90 + (extra2mad * 65) + (extra30day * 65);
-    }
-    return (count2mad * 65) + (count30dayBreakfast * 65);
-  }
+// RM130 - Extra large frozen bundle
+if (qty(IDX_BENTO_28) > 0 || qty(IDX_VACUUM_30) > 0) {
+  return 130;
+}
 
+// RM110 - Large frozen bundle
+if (qty(IDX_BENTO_21) > 0 ||
+    qty(IDX_VACUUM_20) > 0 ||
+    qty(IDX_COMBO_20) > 0 ||
+    qty(IDX_30DAY_BREAKFAST) > 0) {
+  return 110;
+}
+
+// RM90 - Medium large frozen bundle
+if (qty(IDX_BENTO_14) > 0 ||
+    qty(IDX_BREAKFAST_21) > 0 ||
+    qty(IDX_VACUUM_10) > 0 ||
+    qty(IDX_COMBO_10) > 0) {
+  return 90;
+}
+  
   // Bento or Budget Diet Meal present
   const hasBento = qty(IDX_BENTO) > 0;
   const hasBudgetMeal = qty(IDX_BUDGET_WEEK2) > 0 || qty(IDX_BUDGET_WEEK4) > 0;
@@ -1403,27 +1420,40 @@ function getFrozenBoxCharge() {
   const hasMixCarbsSet = qty(IDX_MIX_CARBS) > 0;
   const hasValueBreakfast = qty(IDX_VALUE_BREAKFAST) > 0;
 
-  // Check if RM45-tier limits are exceeded
-  const exceedsRM45Limits = proteinPackCount > 4 || customPackCount > 2 ||
-    qty(IDX_7DAY_BREAKFAST) > 1 || qty(IDX_SOURDOUGH_SET) > 1 || qty(IDX_WRAP_SET) > 1 ||
-    qty(IDX_MIX_CARBS) > 1 || qty(IDX_VALUE_BREAKFAST) > 1;
+ // Check if RM45-tier limits are exceeded
+const exceedsRM45Limits =
+  proteinPackCount > 4 ||
+  customPackCount > 2 ||
+  qty(IDX_7DAY_BREAKFAST) > 1 ||
+  qty(IDX_SOURDOUGH_SET) > 1 ||
+  qty(IDX_WRAP_SET) > 1 ||
+  qty(IDX_MIX_CARBS) > 1 ||
+  qty(IDX_VALUE_BREAKFAST) > 1;
 
-  // RM75: Bento/Budget Meal combined together with exceeded protein/custom limits
-  if (hasBentoOrBudget && exceedsRM45Limits) {
-    return 75;
-  }
+// RM75 - Bento meals
+if (hasBento) {
+  return 75;
+}
 
-  // RM55: Bento/Budget Meal alone, OR RM45 limits exceeded alone
-  if (hasBentoOrBudget || exceedsRM45Limits) {
-    return 55;
-  }
+// RM60 - Budget Diet Meal or exceeded small-box limits
+if (hasBudgetMeal || exceedsRM45Limits) {
+  return 60;
+}
 
-  // RM45: any RM45-eligible item exists within limits
-  if (proteinPackCount > 0 || customPackCount > 0 || hasBreakfastSet || hasSourdoughSet || hasWrapSet || hasMixCarbsSet || hasValueBreakfast) {
-    return 45;
-  }
+// RM45 - Any eligible small frozen item
+if (
+  proteinPackCount > 0 ||
+  customPackCount > 0 ||
+  hasBreakfastSet ||
+  hasSourdoughSet ||
+  hasWrapSet ||
+  hasMixCarbsSet ||
+  hasValueBreakfast
+) {
+  return 45;
+}
 
-  return 0;
+return 0;
 }
 
 function updateFrozenBoxChargeDisplay() {
