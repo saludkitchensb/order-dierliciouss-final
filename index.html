@@ -800,22 +800,15 @@ function onTurnstileError() {
 }
 
 // ============================================================
-// PROMO CODE (10% discount, min RM110 spend on products/packages
-// only — delivery/frozen box charges are excluded, max 30 uses)
+// PROMO CODES — JIMAT10 (10%) & JIMAT5 (5%), min RM110 spend on
+// products/packages only (delivery/frozen box & Custom Protein
+// excluded). Given out manually by staff via WhatsApp — no usage cap.
 // ============================================================
-const PROMO_CODE = 'PROMO10%';
+const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05 };
 const PROMO_MIN_SPEND = 110;
-const PROMO_MAX_USES = 30;
-const PROMO_USES_KEY = 'dl_promo10_uses';
 let promoApplied = false;
-
-function getPromoUsesCount() {
-  return parseInt(localStorage.getItem(PROMO_USES_KEY) || '0', 10);
-}
-
-function incrementPromoUses() {
-  localStorage.setItem(PROMO_USES_KEY, String(getPromoUsesCount() + 1));
-}
+let appliedPromoCode = '';
+let appliedPromoPercent = 0;
 
 function changeQty(idx, delta) {
   if (delta > 0 && isPastCutoff(idx)) {
@@ -1248,12 +1241,12 @@ function updateFrozenBoxChargeDisplay() {
 function getDiscount() {
   if (!promoApplied) return 0;
   const subtotal = getCartTotal();
-  // Custom Protein packages are excluded from the 10% promo discount entirely.
+  // Custom Protein packages are excluded from the promo discount entirely.
   let customTotal = 0;
   customMeals.forEach(m => customTotal += getCustomMealPrice(m));
   const discountableAmount = subtotal - customTotal;
   if (discountableAmount < PROMO_MIN_SPEND) return 0;
-  return discountableAmount * 0.10;
+  return discountableAmount * appliedPromoPercent;
 }
 
 function getGrandTotal() {
@@ -1276,16 +1269,9 @@ function applyPromoCode() {
     updatePromoDisplay();
     return;
   }
-  if (code !== PROMO_CODE.toUpperCase()) {
+  if (!(code in PROMO_CODES)) {
     promoApplied = false;
     msgEl.textContent = 'Kod promo tidak sah.';
-    msgEl.style.color = 'var(--red)';
-    updatePromoDisplay();
-    return;
-  }
-  if (getPromoUsesCount() >= PROMO_MAX_USES) {
-    promoApplied = false;
-    msgEl.textContent = 'Kod promo ini telah mencapai had penggunaan.';
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
@@ -1297,7 +1283,7 @@ function applyPromoCode() {
   if (nonCustomTotal <= 0) {
     // Customer only bought Custom Protein package(s) - promo not applicable at all.
     promoApplied = false;
-    msgEl.textContent = 'Harap maaf, promo 10% tidak termasuk dalam pakej Custom Protein.';
+    msgEl.textContent = 'Harap maaf, promo tidak termasuk dalam pakej Custom Protein.';
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
@@ -1312,7 +1298,9 @@ function applyPromoCode() {
   }
 
   promoApplied = true;
-  msgEl.textContent = 'Kod promo berjaya digunakan! Diskaun 10% telah diberikan.';
+  appliedPromoCode = code;
+  appliedPromoPercent = PROMO_CODES[code];
+  msgEl.textContent = `Kod promo berjaya digunakan! Diskaun ${Math.round(appliedPromoPercent * 100)}% telah diberikan.`;
   msgEl.style.color = 'var(--green)';
   updatePromoDisplay();
 }
@@ -1507,7 +1495,7 @@ function submitOrder() {
     notes,
     items: allItems,
     frozenBoxCharge: isFrozenBoxSubmit ? ('RM ' + fbCharge.toFixed(2)) : '',
-    promoCode: promoUsed ? PROMO_CODE : '',
+    promoCode: promoUsed ? appliedPromoCode : '',
     discount: promoUsed ? ('RM ' + discount.toFixed(2)) : '',
     total: 'RM ' + grandTotal.toFixed(2),
     payment: paymentMethod === 'qr' ? 'DuitNow QR' : 'Pindahan Bank (Maybank)',
@@ -1536,7 +1524,6 @@ function submitOrder() {
     if (settled) return;
     settled = true;
     cleanup();
-    if (promoUsed) incrementPromoUses();
     openWhatsApp();
     goToPage(5);
   }
@@ -1604,7 +1591,7 @@ function openWhatsApp() {
 
   let totalBlock = `Subtotal: RM${subtotal.toFixed(2)}`;
   if (promoUsed) {
-    totalBlock += `\nPromo Code (${PROMO_CODE}): - RM${discount.toFixed(2)}`;
+    totalBlock += `\nPromo Code (${appliedPromoCode} -${Math.round(appliedPromoPercent*100)}%): - RM${discount.toFixed(2)}`;
   }
   if (isFrozenBox) {
     totalBlock += `\nFrozen Box Delivery Charge: RM${fbCharge.toFixed(2)}`;
@@ -1633,6 +1620,8 @@ function resetOrder() {
   }
   addCustomMeal();
   promoApplied = false;
+  appliedPromoCode = '';
+  appliedPromoPercent = 0;
   document.getElementById('promo-input').value = '';
   document.getElementById('promo-message').textContent = '';
   document.getElementById('cust-name').value = '';
