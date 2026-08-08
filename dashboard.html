@@ -138,8 +138,9 @@ tbody tr:hover{background:#FAFCFE}
     <div class="phint">Counts orders marked PAID, PREPARING, READY or DELIVERED as sales (excludes PENDING).</div>
     <div class="controls">
       <select id="summaryMode" onchange="renderSummaryTable()">
-        <option value="week">Weekly (last 8 weeks)</option>
-        <option value="month">Monthly (last 6 months)</option>
+        <option value="today">Today</option>
+        <option value="lastweek">Last Week</option>
+        <option value="month" selected>By Month</option>
       </select>
     </div>
     <div id="summaryTableWrap"></div>
@@ -169,6 +170,7 @@ tbody tr:hover{background:#FAFCFE}
       <select id="sortMode" onchange="renderOrders()">
         <option value="newest">Newest first</option>
         <option value="oldest">Oldest first (by date)</option>
+        <option value="day">Group by day</option>
         <option value="month">Group by month</option>
         <option value="name">By name (A–Z)</option>
       </select>
@@ -283,13 +285,26 @@ function isSale(s){ const k=statusKey(s); return k==='PAID'||k==='PREPARING'||k=
 
 function parseDMY(str){
   if(!str) return null;
-  const parts=String(str).trim().split('/');
+  const s = String(str).trim();
+  const parts = s.split('/');
   if(parts.length===3){
-    return new Date(parseInt(parts[2],10), parseInt(parts[1],10)-1, parseInt(parts[0],10));
+    const day=parseInt(parts[0],10), month=parseInt(parts[1],10), year=parseInt(parts[2],10);
+    if(!isNaN(day) && !isNaN(month) && !isNaN(year)){
+      const d = new Date(year, month-1, day);
+      if(!isNaN(d.getTime())) return d;
+    }
+    return null;
+  }
+  // Fallback for non-slash formats (e.g. ISO "2026-08-01") — never used for slash
+  // strings above to avoid DD/MM vs MM/DD ambiguity.
+  if(s.indexOf('/')===-1){
+    const d2 = new Date(s);
+    if(!isNaN(d2.getTime())) return d2;
   }
   return null;
 }
-function fmtRM(n){ return 'RM ' + (Number(n)||0).toFixed(2); }
+function num(n){ return Number(n)||0; }
+function fmtRM(n){ return 'RM ' + num(n).toFixed(2); }
 const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmtDateShort(d){ return String(d.getDate()).padStart(2,'0')+' '+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear(); }
 function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
@@ -361,7 +376,7 @@ function setConn(ok){
 async function loadOrders(){
   document.getElementById('connText').textContent='Loading…';
   try{
-    const res = await fetch(SCRIPT_URL + '?action=getOrders&pwd=' + encodeURIComponent(AUTH_PWD||''));
+    const res = await fetch(SCRIPT_URL + '?action=getOrders&pwd=' + encodeURIComponent(AUTH_PWD||'') + '&_ts=' + Date.now(), {cache:'no-store'});
     const data = await res.json();
     if(!data.ok){
       if(data.error === 'Unauthorized'){ doLogout(); return; }
@@ -405,17 +420,19 @@ function renderAll(){
 function renderSummaryCards(){
   const now=new Date();
   const wk=weekKey(now), mk=monthKey(now);
-  let wkRev=0, wkCnt=0, mRev=0, mCnt=0, pending=0;
+  let tRev=0, tCnt=0, wkRev=0, wkCnt=0, mRev=0, mCnt=0, pending=0;
 
   orders.forEach(o=>{
     const d=parseDMY(o.date);
     if(statusKey(o.status)==='PENDING') pending++;
     if(!d || !isSale(o.status)) return;
-    if(weekKey(d)===wk){ wkRev+=o.total; wkCnt++; }
-    if(monthKey(d)===mk){ mRev+=o.total; mCnt++; }
+    if(d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate()){ tRev+=num(o.total); tCnt++; }
+    if(weekKey(d)===wk){ wkRev+=num(o.total); wkCnt++; }
+    if(monthKey(d)===mk){ mRev+=num(o.total); mCnt++; }
   });
 
   const cards=[
+    {lbl:'Today Revenue', val:fmtRM(tRev), sub:tCnt+' orders'},
     {lbl:'This Week Revenue', val:fmtRM(wkRev), sub:wkCnt+' orders'},
     {lbl:'This Month Revenue', val:fmtRM(mRev), sub:mCnt+' orders'},
     {lbl:'Avg Order (Month)', val: mCnt ? fmtRM(mRev/mCnt) : 'RM 0.00', sub:'per order'},
@@ -427,29 +444,53 @@ function renderSummaryCards(){
 }
 
 function renderSummaryTable(){
-  const mode = document.getElementById('summaryMode').value;
-  const buckets = {};
-  orders.forEach(o=>{
-    const d=parseDMY(o.date);
-    if(!d || !isSale(o.status)) return;
-    const key = mode==='week' ? weekKey(d) : monthKey(d);
-    if(!buckets[key]) buckets[key] = { label: mode==='week'?weekLabel(d):monthLabel(d), rev:0, cnt:0, sortDate:d };
-    buckets[key].rev += o.total; buckets[key].cnt++;
-  });
-  let rows = Object.values(buckets).sort((a,b)=>b.sortDate-a.sortDate);
-  rows = rows.slice(0, mode==='week' ? 8 : 6);
+  const mode = document.getElementById('summaryMode').value; // 'today' | 'lastweek' | 'month'
+  const now = new Date();
+  let rows = [];
 
-  if(rows.length===0){
+  if(mode==='today'){
+    let rev=0, cnt=0;
+    orders.forEach(o=>{
+      const d=parseDMY(o.date);
+      if(!d || !isSale(o.status)) return;
+      if(d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate()){ rev+=num(o.total); cnt++; }
+    });
+    rows = [{ label:'Today ('+fmtDateShort(now)+')', rev, cnt }];
+  } else if(mode==='lastweek'){
+    const wk = weekKey(now);
+    let rev=0, cnt=0;
+    orders.forEach(o=>{
+      const d=parseDMY(o.date);
+      if(!d || !isSale(o.status)) return;
+      if(weekKey(d)===wk){ rev+=num(o.total); cnt++; }
+    });
+    rows = [{ label:'This Week ('+weekLabel(now)+')', rev, cnt }];
+  } else {
+    const buckets = {};
+    orders.forEach(o=>{
+      const d=parseDMY(o.date);
+      if(!d || !isSale(o.status)) return;
+      const key = monthKey(d);
+      if(!buckets[key]) buckets[key] = { label: monthLabel(d), rev:0, cnt:0, sortDate:d };
+      buckets[key].rev += num(o.total); buckets[key].cnt++;
+    });
+    rows = Object.values(buckets).sort((a,b)=>b.sortDate-a.sortDate).slice(0,6);
+  }
+
+  if(rows.length===0 || rows.every(r=>r.cnt===0)){
     document.getElementById('summaryTableWrap').innerHTML = '<div class="empty">No sales yet in this range.</div>';
     return;
   }
   const totalRev = rows.reduce((s,r)=>s+r.rev,0);
   const totalCnt = rows.reduce((s,r)=>s+r.cnt,0);
-  let html = '<table><thead><tr><th>' + (mode==='week'?'Week':'Month') + '</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th></tr></thead><tbody>';
+  const colLabel = mode==='month' ? 'Month' : 'Period';
+  let html = '<table><thead><tr><th>' + colLabel + '</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th></tr></thead><tbody>';
   rows.forEach(r=>{
     html += `<tr><td>${r.label}</td><td class="mono" style="text-align:right">${r.cnt}</td><td class="mono" style="text-align:right">${fmtRM(r.rev)}</td></tr>`;
   });
-  html += `<tr class="totalrow"><td>Total</td><td class="mono" style="text-align:right">${totalCnt}</td><td class="mono" style="text-align:right">${fmtRM(totalRev)}</td></tr>`;
+  if(rows.length>1){
+    html += `<tr class="totalrow"><td>Total</td><td class="mono" style="text-align:right">${totalCnt}</td><td class="mono" style="text-align:right">${fmtRM(totalRev)}</td></tr>`;
+  }
   html += '</tbody></table>';
   document.getElementById('summaryTableWrap').innerHTML = html;
 }
@@ -513,7 +554,23 @@ function renderOrders(){
   empty.style.display='none';
 
   let html='';
-  if(mode==='month'){
+  if(mode==='day'){
+    const groups={};
+    list.forEach(o=>{
+      const d=parseDMY(o.date);
+      const key = d ? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) : 'unknown';
+      const label = d ? fmtDateShort(d) : 'Unknown date';
+      if(!groups[key]) groups[key]={label, items:[], sortDate:d||new Date(0)};
+      groups[key].items.push(o);
+    });
+    const sortedKeys = Object.keys(groups).sort((a,b)=>groups[b].sortDate-groups[a].sortDate);
+    sortedKeys.forEach(k=>{
+      html += `<tr class="grp-row"><td colspan="7">${groups[k].label} (${groups[k].items.length} orders)</td></tr>`;
+      groups[k].items
+        .sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0))
+        .forEach(o=>{ html+=orderRowHtml(o); });
+    });
+  } else if(mode==='month'){
     const groups={};
     list.forEach(o=>{
       const d=parseDMY(o.date);
@@ -556,7 +613,7 @@ function buildCustomerGroups(){
     const g = map[key];
     g.orders.push(o);
     g.totalOrders++;
-    if(isSale(o.status)) g.totalSpent += (o.total||0);
+    if(isSale(o.status)) g.totalSpent += num(o.total);
     const d = parseDMY(o.date);
     if(d && (!g.lastDate || d>g.lastDate)) g.lastDate = d;
     // keep the most complete/latest-looking name & phone for display
@@ -648,6 +705,7 @@ function ordersInRange(fromStr, toStr){
   const toD = toStr ? new Date(toStr+'T23:59:59') : null;
   return orders.filter(o=>{
     const d = parseDMY(o.date);
+    if((fromD || toD) && !d) return false; // no valid date + a range is set → exclude, don't let it slip through
     if(fromD && d && d<fromD) return false;
     if(toD && d && d>toD) return false;
     return true;
@@ -662,9 +720,9 @@ async function runReport(type){
 
   if(type==='sales'){
     const list = ordersInRange(from,to).filter(o=>isSale(o.status));
-    const rev = list.reduce((s,o)=>s+o.total,0);
+    const rev = list.reduce((s,o)=>s+num(o.total),0);
     const byMonth={};
-    list.forEach(o=>{ const d=parseDMY(o.date); if(!d) return; const k=monthKey(d); if(!byMonth[k]) byMonth[k]={label:monthLabel(d),rev:0,cnt:0}; byMonth[k].rev+=o.total; byMonth[k].cnt++; });
+    list.forEach(o=>{ const d=parseDMY(o.date); if(!d) return; const k=monthKey(d); if(!byMonth[k]) byMonth[k]={label:monthLabel(d),rev:0,cnt:0}; byMonth[k].rev+=num(o.total); byMonth[k].cnt++; });
     let rows = Object.values(byMonth).map(r=>`<tr><td>${r.label}</td><td class="mono" style="text-align:right">${r.cnt}</td><td class="mono" style="text-align:right">${fmtRM(r.rev)}</td></tr>`).join('');
     out.innerHTML = `
       <div class="report-body">
@@ -679,7 +737,7 @@ async function runReport(type){
   else if(type==='orders'){
     const list = ordersInRange(from,to).sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0));
     let rows = list.map(o=>`<tr><td class="mono">${o.inv}</td><td class="mono">${o.date}</td><td>${o.name}</td><td class="mono">${fmtRM(o.total)}</td><td>${statusLabel(o.status)}</td></tr>`).join('');
-    const total = list.reduce((s,o)=>s+o.total,0);
+    const total = list.reduce((s,o)=>s+num(o.total),0);
     out.innerHTML = `
       <div class="report-body">
         <div class="phint">Period: ${from} to ${to} · ${list.length} orders · Generated ${new Date().toLocaleString()}</div>
