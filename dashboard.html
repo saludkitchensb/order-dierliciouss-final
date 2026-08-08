@@ -151,12 +151,21 @@ tbody tr:hover{background:#FAFCFE}
       <input type="text" id="searchBox" placeholder="Search name, phone, or invoice..." oninput="renderOrders()">
       <select id="statusFilter" onchange="renderOrders()">
         <option value="">All statuses</option>
-        <option value="PENDING">Pending</option>
+        <option value="PENDING" selected>Pending</option>
         <option value="PAID">Paid</option>
         <option value="PREPARING">Preparing</option>
         <option value="READY">Ready</option>
         <option value="DELIVERED">Delivered</option>
       </select>
+      <select id="dateRangeMode" onchange="onDateRangeChange()">
+        <option value="">All dates</option>
+        <option value="today">Today</option>
+        <option value="week">This week</option>
+        <option value="month">This month</option>
+        <option value="custom">Custom range…</option>
+      </select>
+      <input type="date" id="dateFrom" style="display:none;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit" onchange="renderOrders()">
+      <input type="date" id="dateTo" style="display:none;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit" onchange="renderOrders()">
       <select id="sortMode" onchange="renderOrders()">
         <option value="newest">Newest first</option>
         <option value="oldest">Oldest first (by date)</option>
@@ -171,6 +180,26 @@ tbody tr:hover{background:#FAFCFE}
       </table>
     </div>
     <div class="empty" id="ordersEmpty" style="display:none">No orders match your filters.</div>
+  </div>
+
+  <div class="panel">
+    <h2>👥 Customers</h2>
+    <div class="phint">Same name + phone number are combined into one customer. Click a customer to see their full order history.</div>
+    <div class="controls">
+      <input type="text" id="custSearchBox" placeholder="Search customer name or phone..." oninput="renderCustomers()">
+      <select id="custSortMode" onchange="renderCustomers()">
+        <option value="recent">Most recent order first</option>
+        <option value="most">Most orders first</option>
+        <option value="name">By name (A–Z)</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Customer</th><th>Phone</th><th style="text-align:right">Total Orders</th><th style="text-align:right">Total Spent</th><th>Last Order</th></tr></thead>
+        <tbody id="customersBody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="customersEmpty" style="display:none">No customers match your search.</div>
   </div>
 
   <div class="panel">
@@ -273,6 +302,43 @@ function weekKey(d){ const s=startOfWeek(d); return s.getFullYear()+'-'+s.getMon
 function weekLabel(d){ const s=startOfWeek(d); const e=new Date(s); e.setDate(s.getDate()+6); return fmtDateShort(s)+' – '+fmtDateShort(e); }
 
 // ============================================================
+// DATE RANGE FILTER (Today / This Week / This Month / Custom)
+// ============================================================
+function onDateRangeChange(){
+  const mode = document.getElementById('dateRangeMode').value;
+  document.getElementById('dateFrom').style.display = mode==='custom' ? 'block' : 'none';
+  document.getElementById('dateTo').style.display = mode==='custom' ? 'block' : 'none';
+  renderOrders();
+}
+function currentDateBounds(){
+  const mode = document.getElementById('dateRangeMode').value;
+  const now = new Date();
+  if(mode==='today'){
+    const s=new Date(now.getFullYear(),now.getMonth(),now.getDate(),0,0,0);
+    const e=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+    return {from:s, to:e};
+  }
+  if(mode==='week'){
+    const s=startOfWeek(now); const e=new Date(s); e.setDate(s.getDate()+6); e.setHours(23,59,59,999);
+    return {from:s, to:e};
+  }
+  if(mode==='month'){
+    const s=new Date(now.getFullYear(),now.getMonth(),1,0,0,0);
+    const e=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+    return {from:s, to:e};
+  }
+  if(mode==='custom'){
+    const fv=document.getElementById('dateFrom').value;
+    const tv=document.getElementById('dateTo').value;
+    return {
+      from: fv ? new Date(fv+'T00:00:00') : null,
+      to: tv ? new Date(tv+'T23:59:59') : null
+    };
+  }
+  return {from:null, to:null};
+}
+
+// ============================================================
 // CONNECTION / LOAD
 // ============================================================
 function toggleCfg(){
@@ -330,6 +396,7 @@ function renderAll(){
   renderSummaryCards();
   renderSummaryTable();
   renderOrders();
+  renderCustomers();
 }
 
 // ============================================================
@@ -393,11 +460,18 @@ function renderSummaryTable(){
 function filteredOrders(){
   const q = document.getElementById('searchBox').value.trim().toLowerCase();
   const sf = document.getElementById('statusFilter').value;
+  const {from, to} = currentDateBounds();
   return orders.filter(o=>{
     if(sf && statusKey(o.status)!==sf) return false;
     if(q){
       const hay = (o.name+' '+o.phone+' '+o.inv).toLowerCase();
       if(hay.indexOf(q)===-1) return false;
+    }
+    if(from || to){
+      const d = parseDMY(o.date);
+      if(!d) return false;
+      if(from && d<from) return false;
+      if(to && d>to) return false;
     }
     return true;
   });
@@ -409,8 +483,8 @@ function orderRowHtml(o){
   return `<tr>
     <td class="mono">${o.inv}</td>
     <td class="mono">${o.date}</td>
-    <td><b>${o.name}</b></td>
-    <td class="mono">${o.phone}</td>
+    <td><b class="custlink" onclick="openCustomerHistory('${customerKey(o).replace(/'/g,"\\'")}')" style="cursor:pointer;color:var(--blue);text-decoration:underline">${o.name}</b></td>
+    <td class="mono custlink" onclick="openCustomerHistory('${customerKey(o).replace(/'/g,"\\'")}')" style="cursor:pointer;color:var(--blue);text-decoration:underline">${o.phone}</td>
     <td class="items-cell">${o.items}</td>
     <td class="mono">${fmtRM(o.total)}</td>
     <td>
@@ -463,6 +537,89 @@ function renderOrders(){
     sorted.forEach(o=>{ html+=orderRowHtml(o); });
   }
   tbody.innerHTML = html;
+}
+
+// ============================================================
+// CUSTOMERS — group orders by same name + phone
+// ============================================================
+function normPhone(p){ return String(p||'').replace(/\D/g,''); }
+function normName(n){ return String(n||'').trim().toLowerCase(); }
+function customerKey(o){ return normPhone(o.phone) + '|' + normName(o.name); }
+
+function buildCustomerGroups(){
+  const map = {};
+  orders.forEach(o=>{
+    const key = customerKey(o);
+    if(!map[key]){
+      map[key] = { key, name:o.name, phone:o.phone, orders:[], totalOrders:0, totalSpent:0, lastDate:null };
+    }
+    const g = map[key];
+    g.orders.push(o);
+    g.totalOrders++;
+    if(isSale(o.status)) g.totalSpent += (o.total||0);
+    const d = parseDMY(o.date);
+    if(d && (!g.lastDate || d>g.lastDate)) g.lastDate = d;
+    // keep the most complete/latest-looking name & phone for display
+    if(o.name) g.name = o.name;
+    if(o.phone) g.phone = o.phone;
+  });
+  return map;
+}
+
+function renderCustomers(){
+  const q = document.getElementById('custSearchBox').value.trim().toLowerCase();
+  const mode = document.getElementById('custSortMode').value;
+  const groups = Object.values(buildCustomerGroups());
+  let list = groups.filter(g=>{
+    if(!q) return true;
+    const hay = (g.name+' '+g.phone).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  });
+
+  if(mode==='most') list.sort((a,b)=>b.totalOrders-a.totalOrders);
+  else if(mode==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else list.sort((a,b)=>(b.lastDate||0)-(a.lastDate||0));
+
+  const tbody = document.getElementById('customersBody');
+  const empty = document.getElementById('customersEmpty');
+  if(list.length===0){
+    tbody.innerHTML=''; empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML = list.map(g=>`
+    <tr>
+      <td><b class="custlink" onclick="openCustomerHistory('${g.key.replace(/'/g,"\\'")}')" style="cursor:pointer;color:var(--blue);text-decoration:underline">${g.name}</b></td>
+      <td class="mono custlink" onclick="openCustomerHistory('${g.key.replace(/'/g,"\\'")}')" style="cursor:pointer;color:var(--blue);text-decoration:underline">${g.phone}</td>
+      <td class="mono" style="text-align:right">${g.totalOrders}</td>
+      <td class="mono" style="text-align:right">${fmtRM(g.totalSpent)}</td>
+      <td class="mono">${g.lastDate ? fmtDateShort(g.lastDate) : '-'}</td>
+    </tr>`).join('');
+}
+
+function openCustomerHistory(key){
+  const groups = buildCustomerGroups();
+  const g = groups[key];
+  if(!g){ return; }
+  const ordersSorted = [...g.orders].sort((a,b)=>(parseDMY(b.date)||0)-(parseDMY(a.date)||0));
+  const rows = ordersSorted.map(o=>`
+    <tr>
+      <td class="mono">${o.inv}</td>
+      <td class="mono">${o.date}</td>
+      <td class="items-cell">${o.items}</td>
+      <td class="mono" style="text-align:right">${fmtRM(o.total)}</td>
+      <td><span class="badge ${statusBadgeClass(o.status)}">${statusLabel(o.status)}</span></td>
+    </tr>`).join('');
+  const html = `
+    <div class="modal-head"><h3>📜 ${g.name} — Order History</h3><button class="closex" onclick="closeModal()">✕</button></div>
+    <div class="phint">${g.phone} · ${g.totalOrders} order(s) total · ${fmtRM(g.totalSpent)} spent (paid/preparing/ready/delivered)</div>
+    <div class="report-body">
+      <table><thead><tr><th>Invoice</th><th>Date</th><th>Items</th><th style="text-align:right">Total</th><th>Status</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="5">No orders</td></tr>'}</tbody></table>
+      <button class="btn btn-blue" style="margin-top:12px;width:100%" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>`;
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalBg').classList.add('show');
 }
 
 // ============================================================
