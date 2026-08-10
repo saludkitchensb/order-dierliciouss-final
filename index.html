@@ -800,7 +800,7 @@
   </div>
 
   <div style="margin-top:12px;display:flex;justify-content:center;">
-    <div class="cf-turnstile" data-sitekey="0x4AAAAAAEKxpJsAbh2k1LUM" data-callback="onTurnstileSuccess" data-error-callback="onTurnstileError"></div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAAEF7Lce86iBTpIhl" data-callback="onTurnstileSuccess" data-error-callback="onTurnstileError"></div>
   </div>
 
   <div class="summary-card" style="margin-top:8px;text-align:left;">
@@ -853,6 +853,10 @@
         </span>
       </div>
     </div>
+
+    <a href="#" id="wa-fallback-btn" style="display:none;width:100%;box-sizing:border-box;padding:14px;border-radius:10px;font-size:15px;font-weight:700;background:#25D366;color:#fff;text-align:center;text-decoration:none;margin-bottom:10px;">
+      💬 Buka WhatsApp untuk Hantar Pesanan<span class="en" style="display:block;font-size:11px;font-weight:500;color:rgba(255,255,255,0.9);margin-top:2px;">Tap here to send your order on WhatsApp</span>
+    </a>
 
     <button class="btn btn-secondary" style="width:100%;background:var(--green-pale);color:var(--green);" onclick="resetOrder()">Buat Pesanan Baru</button>
   </div>
@@ -1886,7 +1890,23 @@ function openWhatsApp() {
   }
   msg += `\n\nPlease confirm my order. Thank you.`;
 
-  window.open('https://wa.me/60126180886?text=' + encodeURIComponent(msg), '_blank');
+  const waUrl = 'https://wa.me/60126180886?text=' + encodeURIComponent(msg);
+
+  // Always wire up the fallback button first, regardless of whether the
+  // auto-open below succeeds. Many mobile browsers (iOS Safari especially)
+  // block window.open() once it's called from an async callback (e.g. after
+  // the Turnstile/Apps Script round-trip) instead of directly from a click,
+  // so we can't rely on auto-open alone anymore.
+  const fallbackBtn = document.getElementById('wa-fallback-btn');
+  if (fallbackBtn) {
+    fallbackBtn.href = waUrl;
+    fallbackBtn.style.display = 'block';
+  }
+
+  // location.href redirect is not subject to the same popup-blocking rules
+  // as window.open() and works more reliably across browsers even when
+  // triggered from an async callback.
+  window.location.href = waUrl;
 }
 
 function resetOrder() {
