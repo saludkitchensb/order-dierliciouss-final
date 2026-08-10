@@ -1903,10 +1903,20 @@ function openWhatsApp() {
     fallbackBtn.style.display = 'block';
   }
 
-  // location.href redirect is not subject to the same popup-blocking rules
-  // as window.open() and works more reliably across browsers even when
-  // triggered from an async callback.
-  window.location.href = waUrl;
+  // window.open() opens WhatsApp in a NEW tab, leaving this order page
+  // untouched — if it's blocked (silently returns null on some mobile
+  // browsers when called from an async callback) the customer simply
+  // stays on the success page and taps the fallback button above.
+  //
+  // NOTE: we deliberately do NOT use window.location.href here even
+  // though it sidesteps popup-blocking — replacing the current page
+  // with the wa.me URL means if that navigation gets interrupted
+  // (e.g. the OS intercepting the link to hand off to the WhatsApp
+  // app, or any network hiccup reaching wa.me) the browser is left
+  // showing a broken "unable to connect" error INSTEAD of this order
+  // page, with no way back except re-doing the whole order. A blocked
+  // window.open() fails safely; a broken full-page redirect does not.
+  window.open(waUrl, '_blank');
 }
 
 function resetOrder() {
