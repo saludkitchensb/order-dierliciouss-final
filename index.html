@@ -1033,9 +1033,19 @@ function onTurnstileError() {
 // products/packages only (delivery/frozen box, Custom Protein,
 // Budget Diet Meal & Breakfast Value Meal excluded). Given out
 // manually by staff via WhatsApp — no usage cap.
+//
+// MERDEKA (10%) — same min spend & exclusions, but time-limited:
+// valid 23/8 2:30PM to 31/8 11:59PM (Malaysia time, UTC+8).
 // ============================================================
-const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05 };
+const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05, 'MERDEKA': 0.10 };
 const PROMO_MIN_SPEND = 150;
+// Time-limited promo codes: code -> {start, end} as MYT (UTC+8) Date objects.
+const PROMO_VALIDITY = {
+  'MERDEKA': {
+    start: new Date('2026-08-23T14:30:00+08:00'),
+    end: new Date('2026-08-31T23:59:00+08:00')
+  }
+};
 // Items excluded from promo discount even when the minimum spend is met.
 const DISCOUNT_EXCLUDED_INDICES = [0, 1, 23]; // Budget Diet Meal Week 2, Breakfast Value Meal, Budget Diet Meal Week 4
 let promoApplied = false;
@@ -1528,6 +1538,11 @@ function getDiscountExcludedTotal() {
 
 function getDiscount() {
   if (!promoApplied) return 0;
+  if (appliedPromoCode in PROMO_VALIDITY) {
+    const now = new Date();
+    const { start, end } = PROMO_VALIDITY[appliedPromoCode];
+    if (now < start || now > end) return 0;
+  }
   const subtotal = getCartTotal();
   const discountableAmount = subtotal - getDiscountExcludedTotal();
   if (discountableAmount < PROMO_MIN_SPEND) return 0;
@@ -1560,6 +1575,17 @@ function applyPromoCode() {
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
+  }
+  if (code in PROMO_VALIDITY) {
+    const now = new Date();
+    const { start, end } = PROMO_VALIDITY[code];
+    if (now < start || now > end) {
+      promoApplied = false;
+      msgEl.textContent = 'Kod promo ini sudah tamat tempoh atau belum bermula.';
+      msgEl.style.color = 'var(--red)';
+      updatePromoDisplay();
+      return;
+    }
   }
   let discountableTotal = subtotal - getDiscountExcludedTotal();
 
