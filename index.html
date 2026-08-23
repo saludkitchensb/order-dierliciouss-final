@@ -1407,7 +1407,12 @@ function updateDeliveryStatus() {
 //   RM150 - Maximum frozen bundle
 function getFrozenBoxCharge() {
   // Indices in PRODUCTS array
-  const IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
+  const IDX_BUDGET_WEEK2 = 0, IDX_VALUE_BREAKFAST = 1, IDX_BENTO = 2, IDX_2MAD = 3,
+IDX_7DAY_BREAKFAST = 4,
+IDX_SOURDOUGH_CHICKEN = 8, IDX_SOURDOUGH_BEEF = 9, IDX_SOURDOUGH_SET = 10,
+IDX_WRAP_CHICKEN = 11, IDX_WRAP_BEEF = 12, IDX_WRAP_SET = 13,
+IDX_PATTY = 14, IDX_MIX_CHICKEN = 15, IDX_MIX_DORY = 16, IDX_MIX_SALMON = 17, IDX_MIX_PROTEIN = 18,
+IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
 IDX_BENTO_7_VEG = 25, IDX_BENTO_14 = 26, IDX_BENTO_21 = 27, IDX_BENTO_28 = 28,
 IDX_VACUUM_10 = 29, IDX_VACUUM_20 = 30, IDX_VACUUM_30 = 31,
 IDX_COMBO_7 = 32, IDX_COMBO_14 = 33, IDX_COMBO_21 = 34, IDX_COMBO_28 = 35,
@@ -1460,7 +1465,7 @@ if (qty(IDX_BENTO_14) > 0 ||
 }
   
   // Bento or Budget Diet Meal present
-  const hasBento = qty(IDX_BENTO) > 0;
+  const hasBento = qty(IDX_BENTO) > 0 || qty(IDX_2MAD) > 0;
   const hasBudgetMeal = qty(IDX_BUDGET_WEEK2) > 0 || qty(IDX_BUDGET_WEEK4) > 0;
   const hasBentoOrBudget = hasBento || hasBudgetMeal;
 
