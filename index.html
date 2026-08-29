@@ -156,9 +156,9 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 2</div>
       <div class="item-price">RM 100.00</div>
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Pad Ka Prao Chicken + Basmati Rice</div>  
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Spicy Creamy Chicken + Pasta</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 15 Ogos<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 15 August</span></div>
+<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Hot Spicy Chicken + Coconut Ginger Rice</div>  
+<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Creamy Mushroom Chicken Spaghetti</div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 13 September<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 13 September</span></div>
       <div class="cutoff-label" id="cutoff-label-0" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -171,9 +171,9 @@
     <div class="item-info">
       <div class="item-name">Budget Diet Meal Week 4</div>
       <div class="item-price">RM 100.00</div>
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Chicken Kebab + Kabsah Rice</div>  
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Honey Sriracha Chicken + Spaghetti</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 29 Ogos<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 29 August</span></div>
+<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Spicy Masala Chicken + Butter Rice</div>  
+<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Tomata & Herbs Chicken + Spaghetti</div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 27 September<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 27 September</span></div>
       <div class="cutoff-label" id="cutoff-label-23" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
     </div>
     <div class="qty-ctrl">
@@ -886,16 +886,16 @@
 // new month's cutoff and the item re-enables automatically once the
 // current time is before that new cutoff.
 const CUTOFF_DATES = {
-  0:  '2026-08-12T23:59:59',  // Budget Diet Meal Week 2 (PRODUCTS index 0)
-  23: '2026-08-26T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
+  0:  '2026-09-10T23:59:59',  // Budget Diet Meal Week 2 (PRODUCTS index 0)
+  23: '2026-09-24T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
 };
 
 // Fixed delivery/self-pickup dates for Budget Diet Meal weeks (per catalog).
 // These override the normal 3-5 working day estimate when the order contains
 // one of these items. Edit alongside CUTOFF_DATES each month.
 const FIXED_DELIVERY_DATES = {
-  0:  { bm: '15 Ogos 2026', en: '15 August 2026' },  // Budget Diet Meal Week 2
-  23: { bm: '29 Ogos 2026', en: '29 August 2026' },  // Budget Diet Meal Week 4
+  0:  { bm: '13 September 2026', en: '13 September 2026' },  // Budget Diet Meal Week 2
+  23: { bm: '27 September 2026', en: '27 September 2026' },  // Budget Diet Meal Week 4
 };
 
 function getFixedDeliveryDateForCart() {
@@ -1033,19 +1033,9 @@ function onTurnstileError() {
 // products/packages only (delivery/frozen box, Custom Protein,
 // Budget Diet Meal & Breakfast Value Meal excluded). Given out
 // manually by staff via WhatsApp — no usage cap.
-//
-// MERDEKA (10%) — same min spend & exclusions, but time-limited:
-// valid 23/8 2:30PM to 31/8 11:59PM (Malaysia time, UTC+8).
 // ============================================================
-const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05, 'MERDEKA': 0.10 };
+const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05 };
 const PROMO_MIN_SPEND = 150;
-// Time-limited promo codes: code -> {start, end} as MYT (UTC+8) Date objects.
-const PROMO_VALIDITY = {
-  'MERDEKA': {
-    start: new Date('2026-08-23T14:30:00+08:00'),
-    end: new Date('2026-08-31T23:59:00+08:00')
-  }
-};
 // Items excluded from promo discount even when the minimum spend is met.
 const DISCOUNT_EXCLUDED_INDICES = [0, 1, 23]; // Budget Diet Meal Week 2, Breakfast Value Meal, Budget Diet Meal Week 4
 let promoApplied = false;
@@ -1407,12 +1397,7 @@ function updateDeliveryStatus() {
 //   RM150 - Maximum frozen bundle
 function getFrozenBoxCharge() {
   // Indices in PRODUCTS array
-  const IDX_BUDGET_WEEK2 = 0, IDX_VALUE_BREAKFAST = 1, IDX_BENTO = 2, IDX_2MAD = 3,
-IDX_7DAY_BREAKFAST = 4,
-IDX_SOURDOUGH_CHICKEN = 8, IDX_SOURDOUGH_BEEF = 9, IDX_SOURDOUGH_SET = 10,
-IDX_WRAP_CHICKEN = 11, IDX_WRAP_BEEF = 12, IDX_WRAP_SET = 13,
-IDX_PATTY = 14, IDX_MIX_CHICKEN = 15, IDX_MIX_DORY = 16, IDX_MIX_SALMON = 17, IDX_MIX_PROTEIN = 18,
-IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
+  const IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
 IDX_BENTO_7_VEG = 25, IDX_BENTO_14 = 26, IDX_BENTO_21 = 27, IDX_BENTO_28 = 28,
 IDX_VACUUM_10 = 29, IDX_VACUUM_20 = 30, IDX_VACUUM_30 = 31,
 IDX_COMBO_7 = 32, IDX_COMBO_14 = 33, IDX_COMBO_21 = 34, IDX_COMBO_28 = 35,
@@ -1465,7 +1450,7 @@ if (qty(IDX_BENTO_14) > 0 ||
 }
   
   // Bento or Budget Diet Meal present
-  const hasBento = qty(IDX_BENTO) > 0 || qty(IDX_2MAD) > 0;
+  const hasBento = qty(IDX_BENTO) > 0;
   const hasBudgetMeal = qty(IDX_BUDGET_WEEK2) > 0 || qty(IDX_BUDGET_WEEK4) > 0;
   const hasBentoOrBudget = hasBento || hasBudgetMeal;
 
@@ -1543,11 +1528,6 @@ function getDiscountExcludedTotal() {
 
 function getDiscount() {
   if (!promoApplied) return 0;
-  if (appliedPromoCode in PROMO_VALIDITY) {
-    const now = new Date();
-    const { start, end } = PROMO_VALIDITY[appliedPromoCode];
-    if (now < start || now > end) return 0;
-  }
   const subtotal = getCartTotal();
   const discountableAmount = subtotal - getDiscountExcludedTotal();
   if (discountableAmount < PROMO_MIN_SPEND) return 0;
@@ -1580,17 +1560,6 @@ function applyPromoCode() {
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
-  }
-  if (code in PROMO_VALIDITY) {
-    const now = new Date();
-    const { start, end } = PROMO_VALIDITY[code];
-    if (now < start || now > end) {
-      promoApplied = false;
-      msgEl.textContent = 'Kod promo ini sudah tamat tempoh atau belum bermula.';
-      msgEl.style.color = 'var(--red)';
-      updatePromoDisplay();
-      return;
-    }
   }
   let discountableTotal = subtotal - getDiscountExcludedTotal();
 
