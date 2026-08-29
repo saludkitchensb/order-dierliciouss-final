@@ -184,7 +184,7 @@
   </div>
   <div class="menu-item" id="item-1">
     <div class="item-info">
-      <div class="item-name">Breakfast Value Meal</div>
+      <div class="item-name">Budget Breakfast</div>
       <div class="item-price">RM 100.00</div>
 <div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Sourdough Chicken Muffin w/o Egg</div>  
 <div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Chicken Wrap</div>
@@ -772,8 +772,8 @@
       <button type="button" class="btn btn-secondary" style="width:auto;padding:0 16px;" onclick="applyPromoCode()">Guna</button>
     </div>
     <div class="note" style="margin-top:10px;margin-bottom:0;">
-      <strong>Syarat Kod Promo:</strong> Pembelian minimum RM150 diperlukan. Diskaun tidak terpakai pada <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, walaupun jumlah keseluruhan pesanan mencapai had minimum.
-      <span class="en"><strong>Promo Code Terms:</strong> Minimum spend of RM150 required. Discount does not apply to <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, even if your total order reaches the minimum spend.</span>
+      <strong>Syarat Kod Promo:</strong> Pembelian minimum RM150 diperlukan. Diskaun tidak terpakai pada <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Budget Breakfast</strong>, walaupun jumlah keseluruhan pesanan mencapai had minimum.
+      <span class="en"><strong>Promo Code Terms:</strong> Minimum spend of RM150 required. Discount does not apply to <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Budget Breakfast</strong>, even if your total order reaches the minimum spend.</span>
     </div>
     <div id="promo-message" style="font-size:12px;margin-top:8px;"></div>
   </div>
@@ -957,7 +957,7 @@ function applyCutoffStates() {
 
 const PRODUCTS = [
   { name: 'Budget Diet Meal Week 2', price: 100 },
-  { name: 'Breakfast Value Meal', price: 100 },
+  { name: 'Budget Breakfast', price: 100 },
   { name: '7 Days Lunch/Dinner Meals (Bento)', price: 130 },
   { name: '2MAD (7 Brunch + 7 Dinner)', price: 214 },
   { name: '7 Days Breakfast', price: 84 },
@@ -1031,13 +1031,13 @@ function onTurnstileError() {
 // ============================================================
 // PROMO CODES — JIMAT10 (10%) & JIMAT5 (5%), min RM150 spend on
 // products/packages only (delivery/frozen box, Custom Protein,
-// Budget Diet Meal & Breakfast Value Meal excluded). Given out
+// Budget Diet Meal & Budget Breakfast excluded). Given out
 // manually by staff via WhatsApp — no usage cap.
 // ============================================================
 const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05 };
 const PROMO_MIN_SPEND = 150;
 // Items excluded from promo discount even when the minimum spend is met.
-const DISCOUNT_EXCLUDED_INDICES = [0, 1, 23]; // Budget Diet Meal Week 2, Breakfast Value Meal, Budget Diet Meal Week 4
+const DISCOUNT_EXCLUDED_INDICES = [0, 1, 23]; // Budget Diet Meal Week 2, Budget Breakfast, Budget Diet Meal Week 4
 let promoApplied = false;
 let appliedPromoCode = '';
 let appliedPromoPercent = 0;
@@ -1564,9 +1564,9 @@ function applyPromoCode() {
   let discountableTotal = subtotal - getDiscountExcludedTotal();
 
   if (discountableTotal <= 0) {
-    // Customer only bought excluded items (Custom Protein / Budget Diet Meal / Breakfast Value Meal) - promo not applicable at all.
+    // Customer only bought excluded items (Custom Protein / Budget Diet Meal / Budget Breakfast) - promo not applicable at all.
     promoApplied = false;
-    msgEl.textContent = 'Harap maaf, promo tidak termasuk pakej Custom Protein, Budget Diet Meal & Breakfast Value Meal.';
+    msgEl.textContent = 'Harap maaf, promo tidak termasuk pakej Custom Protein, Budget Diet Meal & Budget Breakfast.';
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
@@ -1574,7 +1574,7 @@ function applyPromoCode() {
 
   if (discountableTotal < PROMO_MIN_SPEND) {
     promoApplied = false;
-    msgEl.textContent = `Pembelian minimum RM${PROMO_MIN_SPEND.toFixed(2)} (tidak termasuk pakej Custom Protein, Budget Diet Meal, Breakfast Value Meal & caj penghantaran) diperlukan untuk kod ini.`;
+    msgEl.textContent = `Pembelian minimum RM${PROMO_MIN_SPEND.toFixed(2)} (tidak termasuk pakej Custom Protein, Budget Diet Meal, Budget Breakfast & caj penghantaran) diperlukan untuk kod ini.`;
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
