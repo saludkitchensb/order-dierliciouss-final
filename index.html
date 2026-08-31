@@ -772,8 +772,8 @@
       <button type="button" class="btn btn-secondary" style="width:auto;padding:0 16px;" onclick="applyPromoCode()">Guna</button>
     </div>
     <div class="note" style="margin-top:10px;margin-bottom:0;">
-      <strong>Syarat Kod Promo:</strong> Pembelian minimum RM150 diperlukan. Diskaun tidak terpakai pada <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, walaupun jumlah keseluruhan pesanan mencapai had minimum.
-      <span class="en"><strong>Promo Code Terms:</strong> Minimum spend of RM150 required. Discount does not apply to <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, even if your total order reaches the minimum spend.</span>
+      <strong>Syarat Kod Promo (MERDEKA):</strong> Pembelian minimum RM150 diperlukan. Diskaun tidak terpakai pada <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, walaupun jumlah keseluruhan pesanan mencapai had minimum. Sah sehingga <strong>31 Ogos, 11:59 malam</strong> sahaja.
+      <span class="en"><strong>Promo Code Terms (MERDEKA):</strong> Minimum spend of RM150 required. Discount does not apply to <strong>Custom Protein</strong>, <strong>Budget Diet Meal</strong> &amp; <strong>Breakfast Value Meal</strong>, even if your total order reaches the minimum spend. Valid until <strong>31 Aug, 11:59 PM</strong> only.</span>
     </div>
     <div id="promo-message" style="font-size:12px;margin-top:8px;"></div>
   </div>
@@ -1029,13 +1029,15 @@ function onTurnstileError() {
 }
 
 // ============================================================
-// PROMO CODES — JIMAT10 (10%) & JIMAT5 (5%), min RM150 spend on
-// products/packages only (delivery/frozen box, Custom Protein,
-// Budget Diet Meal & Breakfast Value Meal excluded). Given out
-// manually by staff via WhatsApp — no usage cap.
+// PROMO CODES — MERDEKA (10%), min RM150 spend on products/
+// packages only (delivery/frozen box, Custom Protein, Budget
+// Diet Meal & Breakfast Value Meal excluded). Valid until
+// 31 Aug (11:59 PM) only.
+// NOTE: JIMAT10 & JIMAT5 have been retired and are no longer valid.
 // ============================================================
-const PROMO_CODES = { 'JIMAT10': 0.10, 'JIMAT5': 0.05 };
+const PROMO_CODES = { 'MERDEKA': 0.10 };
 const PROMO_MIN_SPEND = 150;
+const PROMO_EXPIRY = new Date('2026-08-31T23:59:00'); // update year as needed each time this is reused
 // Items excluded from promo discount even when the minimum spend is met.
 const DISCOUNT_EXCLUDED_INDICES = [0, 1, 23]; // Budget Diet Meal Week 2, Breakfast Value Meal, Budget Diet Meal Week 4
 let promoApplied = false;
@@ -1557,6 +1559,13 @@ function applyPromoCode() {
   if (!(code in PROMO_CODES)) {
     promoApplied = false;
     msgEl.textContent = 'Kod promo tidak sah.';
+    msgEl.style.color = 'var(--red)';
+    updatePromoDisplay();
+    return;
+  }
+  if (code === 'MERDEKA' && new Date() > PROMO_EXPIRY) {
+    promoApplied = false;
+    msgEl.textContent = 'Kod promo MERDEKA telah tamat tempoh.';
     msgEl.style.color = 'var(--red)';
     updatePromoDisplay();
     return;
