@@ -152,36 +152,6 @@
   </div>
 
   <div class="category-label">Budget Diet Meal</div>
-  <div class="menu-item" id="item-0">
-    <div class="item-info">
-      <div class="item-name">Budget Diet Meal Week 2</div>
-      <div class="item-price">RM 100.00</div>
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Hot Spicy Chicken + Coconut Ginger Rice</div>  
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Creamy Mushroom Chicken Spaghetti</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 13 September<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 13 September</span></div>
-      <div class="cutoff-label" id="cutoff-label-0" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
-    </div>
-    <div class="qty-ctrl">
-      <button class="qty-btn" id="qty-btn-dec-0" onclick="changeQty(0,-1)">−</button>
-      <span class="qty-val" id="qty-0">0</span>
-      <button class="qty-btn" id="qty-btn-inc-0" onclick="changeQty(0,1)">+</button>
-    </div>
-  </div>
-  <div class="menu-item" id="item-23">
-    <div class="item-info">
-      <div class="item-name">Budget Diet Meal Week 4</div>
-      <div class="item-price">RM 100.00</div>
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Spicy Masala Chicken + Butter Rice</div>  
-<div style="font-size:11px;color:var(--ink-mute);margin-top:2px;">5x Tomata & Herbs Chicken + Spaghetti</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">Delivery/Self Pickup: 27 September<span class="en" style="display:block;font-weight:400;color:var(--ink-mute);font-size:10px;">Delivery/Self Pickup: 27 September</span></div>
-      <div class="cutoff-label" id="cutoff-label-23" style="display:none;">Pesanan ditutup<span class="en" style="display:block;font-size:10px;">Orders closed</span></div>
-    </div>
-    <div class="qty-ctrl">
-      <button class="qty-btn" id="qty-btn-dec-23" onclick="changeQty(23,-1)">−</button>
-      <span class="qty-val" id="qty-23">0</span>
-      <button class="qty-btn" id="qty-btn-inc-23" onclick="changeQty(23,1)">+</button>
-    </div>
-  </div>
   <div class="menu-item" id="item-1">
     <div class="item-info">
       <div class="item-name">Breakfast Value Meal</div>
@@ -886,16 +856,12 @@
 // new month's cutoff and the item re-enables automatically once the
 // current time is before that new cutoff.
 const CUTOFF_DATES = {
-  0:  '2026-09-10T23:59:59',  // Budget Diet Meal Week 2 (PRODUCTS index 0)
-  23: '2026-09-24T23:59:59',  // Budget Diet Meal Week 4 (PRODUCTS index 23)
 };
 
 // Fixed delivery/self-pickup dates for Budget Diet Meal weeks (per catalog).
 // These override the normal 3-5 working day estimate when the order contains
 // one of these items. Edit alongside CUTOFF_DATES each month.
 const FIXED_DELIVERY_DATES = {
-  0:  { bm: '13 September 2026', en: '13 September 2026' },  // Budget Diet Meal Week 2
-  23: { bm: '27 September 2026', en: '27 September 2026' },  // Budget Diet Meal Week 4
 };
 
 function getFixedDeliveryDateForCart() {
