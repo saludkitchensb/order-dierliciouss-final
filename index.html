@@ -707,7 +707,7 @@
     </div>
     <div class="note" id="pickup-note" style="display:none;"><strong>Self Pickup di Cybersouth.</strong> Alamat penuh akan dikongsi oleh admin sebaik sahaja pesanan anda sedia untuk diambil.<span class="en">Self pickup at Cybersouth. The full address will be shared by our admin once your order is ready for collection.</span></div>
     <div id="pickup-estimate" class="delivery-badge" style="display:none;">Anggaran tarikh sedia diambil: sedang dikira...</div>
-    <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.<span class="en">Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier.</span></div>
+    <div class="note" id="frozenbox-note" style="display:none;"><strong>Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150</strong> &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier. <strong>Setelah menghantar pesanan, Admin akan memaklumkan jumlah caj penghantaran berdasarkan item yang di pesan.</strong><span class="en">Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier. After submitting your order, Admin will inform you of the total delivery charge based on the items ordered.</span></div>
   </div>
 
   <div class="info-card" id="delivery-info-card">
@@ -793,7 +793,7 @@
   <div class="summary-card" id="frozenbox-charge-card" style="margin-top:4px;display:none;">
     <div class="summary-row">
       <span class="label">Caj Penghantaran (Frozen Box)<span class="en" style="display:block;font-size:11px;">Frozen Box Delivery Charge</span></span>
-      <span class="val" id="frozenbox-charge-val">RM 0.00</span>
+      <span class="val" id="frozenbox-charge-val">Akan dimaklumkan oleh Admin</span>
     </div>
   </div>
 
@@ -1342,7 +1342,7 @@ function getDeliveryStatus() {
   if (isFrozenBoxMethod) {
     return { free: false, paragraphs: [
       { bm: `<strong>Anggaran tiba (Frozen Box Delivery):</strong> ${getDeliveryDateValue()}`, en: `Estimated Arrival (Frozen Box Delivery): ${getDeliveryDateValue()}` },
-      { bm: 'Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150 &amp; bergantung kepada size Frozen Box yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier.', en: 'Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the styrofoam box used. Delivery is within 24 hours after handover to the courier.' }
+      { bm: 'Caj penghantaran Frozen Box Delivery bermula dari RM45 sehingga RM150 &amp; bergantung kepada size bekas frozen yang akan digunakan. Penghantaran dalam tempoh 24 jam setelah serahan kepada pihak Courier. Setelah menghantar pesanan, Admin akan memaklumkan jumlah caj penghantaran berdasarkan item yang di pesan.', en: 'Frozen Box Delivery charges range from RM45 to RM150, depending on the size of the frozen box used. Delivery is within 24 hours after handover to the courier. After submitting your order, Admin will inform you of the total delivery charge based on the items ordered.' }
     ] };
   }
 
@@ -1391,130 +1391,20 @@ function updateDeliveryStatus() {
 
 // ============================================================
 // FROZEN BOX DELIVERY CHARGE
+// Charge is NOT auto-calculated. Admin informs the customer of the
+// charge (RM45 - RM150, depending on box size) after the order is
+// submitted, so it is not included in the Grand Total.
 // ============================================================
-// Tiers (highest applicable tier wins):
-//   RM45  - Small frozen items / breakfast add-ons
-//   RM60  - Protein packs / Budget Diet Meal
-//   RM75  - Bento meals
-//   RM90  - 30 Days Breakfast Package
-//   RM110 - Large frozen bundle
-//   RM130 - Extra large frozen bundle
-//   RM150 - Maximum frozen bundle
-function getFrozenBoxCharge() {
-  // Indices in PRODUCTS array
-  const IDX_MIX_CARBS = 22, IDX_BUDGET_WEEK4 = 23, IDX_30DAY_BREAKFAST = 24,
-IDX_BENTO_7_VEG = 25, IDX_BENTO_14 = 26, IDX_BENTO_21 = 27, IDX_BENTO_28 = 28,
-IDX_VACUUM_10 = 29, IDX_VACUUM_20 = 30, IDX_VACUUM_30 = 31,
-IDX_COMBO_7 = 32, IDX_COMBO_14 = 33, IDX_COMBO_21 = 34, IDX_COMBO_28 = 35,
-IDX_COMBO_10 = 36, IDX_COMBO_20 = 37, IDX_COMBO_30 = 38,
-IDX_BREAKFAST_14 = 39, IDX_BREAKFAST_21 = 40, IDX_BREAKFAST_28 = 41;
-
-  const qty = i => quantities[i] || 0;
-// ============================================================
-// LARGE / MONTHLY PACKAGE COUNTING
-// ============================================================
-
-// Count all large monthly packages in the same order
-const largePackageCount =
-  qty(IDX_BENTO_21) +
-  qty(IDX_BENTO_28) +
-  qty(IDX_VACUUM_20) +
-  qty(IDX_VACUUM_30) +
-  qty(IDX_COMBO_20) +
-  qty(IDX_COMBO_30) +
-  qty(IDX_30DAY_BREAKFAST);
-
-console.log({
-  breakfast30: qty(IDX_30DAY_BREAKFAST),
-  bento28: qty(IDX_BENTO_28),
-  vacuum30: qty(IDX_VACUUM_30),
-  combo30: qty(IDX_COMBO_30),
-  largePackageCount
-});
-
-// 3 or more large packages = RM150
-if (largePackageCount >= 3) {
-  return 150;
-}
-
-// 2 large packages = RM130
-if (largePackageCount === 2) {
-  return 130;
-}
-
-// 1 large package = RM110
-if (largePackageCount === 1) {
-  return 110;
-}
-// RM90 - Medium large frozen bundle
-if (qty(IDX_BENTO_14) > 0 ||
-    qty(IDX_BREAKFAST_21) > 0 ||
-    qty(IDX_VACUUM_10) > 0 ||
-    qty(IDX_COMBO_10) > 0) {
-  return 90;
-}
-  
-  // Bento or Budget Diet Meal present
-  const hasBento = qty(IDX_BENTO) > 0;
-  const hasBudgetMeal = qty(IDX_BUDGET_WEEK2) > 0 || qty(IDX_BUDGET_WEEK4) > 0;
-  const hasBentoOrBudget = hasBento || hasBudgetMeal;
-
-  // Protein-type packs from menu only: Patty, Mix Chicken, Mix Dory, Mix Salmon, Mix Protein
-  const proteinPackCount = qty(IDX_PATTY) + qty(IDX_MIX_CHICKEN) + qty(IDX_MIX_DORY) + qty(IDX_MIX_SALMON) + qty(IDX_MIX_PROTEIN);
-
-  // Custom meal entries (protein and/or carbs) - separate "2 set" allowance per spec
-  const customPackCount = customMeals.length;
-
-  const hasBreakfastSet = qty(IDX_7DAY_BREAKFAST) > 0;
-  const hasSourdoughSet = qty(IDX_SOURDOUGH_CHICKEN) > 0 || qty(IDX_SOURDOUGH_BEEF) > 0 || qty(IDX_SOURDOUGH_SET) > 0;
-  const hasWrapSet = qty(IDX_WRAP_CHICKEN) > 0 || qty(IDX_WRAP_BEEF) > 0 || qty(IDX_WRAP_SET) > 0;
-  const hasMixCarbsSet = qty(IDX_MIX_CARBS) > 0;
-  const hasValueBreakfast = qty(IDX_VALUE_BREAKFAST) > 0;
-
- // Check if RM45-tier limits are exceeded
-const exceedsRM45Limits =
-  proteinPackCount > 4 ||
-  customPackCount > 2 ||
-  qty(IDX_7DAY_BREAKFAST) > 1 ||
-  qty(IDX_SOURDOUGH_SET) > 1 ||
-  qty(IDX_WRAP_SET) > 1 ||
-  qty(IDX_MIX_CARBS) > 1 ||
-  qty(IDX_VALUE_BREAKFAST) > 1;
-
-// RM75 - Bento meals
-if (hasBento) {
-  return 75;
-}
-
-// RM60 - Budget Diet Meal or exceeded small-box limits
-if (hasBudgetMeal || exceedsRM45Limits) {
-  return 60;
-}
-
-// RM45 - Any eligible small frozen item
-if (
-  proteinPackCount > 0 ||
-  customPackCount > 0 ||
-  hasBreakfastSet ||
-  hasSourdoughSet ||
-  hasWrapSet ||
-  hasMixCarbsSet ||
-  hasValueBreakfast
-) {
-  return 45;
-}
-
-return 0;
-}
+const FROZEN_BOX_CHARGE_TEXT_BM = 'Akan dimaklumkan oleh Admin';
+const FROZEN_BOX_CHARGE_TEXT_EN = 'To be confirmed by Admin';
 
 function updateFrozenBoxChargeDisplay() {
   const card = document.getElementById('frozenbox-charge-card');
   const val = document.getElementById('frozenbox-charge-val');
   if (!card || !val) return;
   if (receiveMethod === 'frozenbox') {
-    const charge = getFrozenBoxCharge();
     card.style.display = 'block';
-    val.textContent = 'RM ' + charge.toFixed(2);
+    val.textContent = FROZEN_BOX_CHARGE_TEXT_BM;
   } else {
     card.style.display = 'none';
   }
@@ -1542,8 +1432,7 @@ function getDiscount() {
 function getGrandTotal() {
   const base = getCartTotal();
   const discount = getDiscount();
-  const fbCharge = receiveMethod === 'frozenbox' ? getFrozenBoxCharge() : 0;
-  return base - discount + fbCharge;
+  return base - discount;
 }
 
 function applyPromoCode() {
@@ -1773,7 +1662,6 @@ function submitOrder() {
   const customLines = buildCustomMealLines();
   const allItems = [...items, ...customLines].join('\n');
   const isFrozenBoxSubmit = receiveMethod === 'frozenbox';
-  const fbCharge = isFrozenBoxSubmit ? getFrozenBoxCharge() : 0;
   const discount = getDiscount();
   const grandTotal = getGrandTotal();
   const promoUsed = promoApplied && discount > 0;
@@ -1789,7 +1677,7 @@ function submitOrder() {
     address: isPickup ? 'SELF PICKUP @ Cybersouth' : address,
     notes,
     items: allItems,
-    frozenBoxCharge: isFrozenBoxSubmit ? ('RM ' + fbCharge.toFixed(2)) : '',
+    frozenBoxCharge: isFrozenBoxSubmit ? FROZEN_BOX_CHARGE_TEXT_EN : '',
     promoCode: promoUsed ? appliedPromoCode : '',
     discount: promoUsed ? ('RM ' + discount.toFixed(2)) : '',
     total: 'RM ' + grandTotal.toFixed(2),
@@ -1879,7 +1767,6 @@ function openWhatsApp() {
   }
 
   const subtotal = getCartTotal();
-  const fbCharge = isFrozenBox ? getFrozenBoxCharge() : 0;
   const discount = getDiscount();
   const promoUsed = promoApplied && discount > 0;
   const grandTotal = getGrandTotal();
@@ -1889,7 +1776,7 @@ function openWhatsApp() {
     totalBlock += `\nPromo Code (${appliedPromoCode} -${Math.round(appliedPromoPercent*100)}%): - RM${discount.toFixed(2)}`;
   }
   if (isFrozenBox) {
-    totalBlock += `\nFrozen Box Delivery Charge: RM${fbCharge.toFixed(2)}`;
+    totalBlock += `\nFrozen Box Delivery Charge: ${FROZEN_BOX_CHARGE_TEXT_EN} (not included in Grand Total)`;
   }
   totalBlock += `\nGrand Total: RM${grandTotal.toFixed(2)}`;
 
